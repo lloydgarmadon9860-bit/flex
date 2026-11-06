@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="cs" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flex od bubble</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { DEFAULT: '#1d9bf0', hover: '#1a8cd8', dark: '#031018' }
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #e7e9ea; -webkit-tap-highlight-color: transparent; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333639; border-radius: 3px; }
+        .glass-header { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .animate-fade { animation: fadeIn 0.25s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start select-none bg-black">
+
+    <div id="toast-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none w-11/12 max-w-sm"></div>
+
+    <!-- LOGIN / ACCOUNT SWITCHER OVERLAY -->
+    <div id="auth-wrapper" class="fixed inset-0 z-50 bg-black flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-[#16181c] border border-[#2f3336] rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative my-auto animate-fade">
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand via-amber-400 to-purple-500 rounded-t-3xl"></div>
+            
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-brand/10 text-brand text-3xl mb-3 font-black shadow-inner">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <h1 class="text-2xl font-extrabold tracking-tight text-white">Flex od bubble</h1>
+                <p class="text-xs text-[#71767b] mt-1">Vstupte do své sítě</p>
+            </div>
+
+            <!-- Saved Accounts Switcher -->
+            <div id="saved-accounts-section" class="mb-5 hidden">
+                <label class="block text-xs font-bold uppercase tracking-wider text-[#71767b] mb-2">Vyberte uložený účet</label>
+                <div id="saved-accounts-list" class="space-y-2 max-h-48 overflow-y-auto pr-1 no-scrollbar"></div>
+                <div class="relative flex py-4 items-center">
+                    <div class="flex-grow border-t border-[#2f3336]"></div>
+                    <span class="flex-shrink mx-3 text-[10px] text-[#71767b] uppercase font-bold">Nebo přihlásit nový</span>
+                    <div class="flex-grow border-t border-[#2f3336]"></div>
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <form id="auth-form" onsubmit="event.preventDefault(); window.handleLoginAction();" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[#71767b] mb-1">Celé jméno</label>
+                    <input type="text" id="auth-fullname" placeholder="Např. Jan Novák" class="w-full bg-black border border-[#2f3336] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[#71767b] mb-1">Uživatelské jméno</label>
+                    <div class="flex items-center bg-black border border-[#2f3336] rounded-xl px-4 py-3 focus-within:border-brand transition">
+                        <span class="text-[#71767b] mr-1 text-sm font-bold">@</span>
+                        <input type="text" id="auth-handle" placeholder="Flex" class="w-full bg-transparent text-sm text-white focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[#71767b] mb-1">E-mail</label>
+                    <input type="email" id="auth-email" placeholder="vas@email.cz" class="w-full bg-black border border-[#2f3336] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[#71767b] mb-1">Heslo</label>
+                    <input type="password" id="auth-pass" placeholder="••••••••" class="w-full bg-black border border-[#2f3336] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand transition">
+                </div>
+                <button type="submit" id="auth-submit-btn" class="w-full bg-white hover:bg-[#e2e8f0] text-black font-extrabold py-3.5 rounded-xl transition shadow-lg mt-4 flex items-center justify-center gap-2 cursor-pointer">
+                    <span id="auth-btn-text">Přihlásit se / Vytvořit</span>
+                    <i class="fa-solid fa-arrow-right text-xs" id="auth-btn-icon"></i>
+                </button>
+            </form>
+            <button type="button" onclick="window.ownerGoogleLogin()" class="w-full mt-3 bg-transparent border border-[#2f3336] hover:border-amber-400 text-[#71767b] hover:text-amber-400 text-xs font-bold py-2.5 rounded-xl transition cursor-pointer"><i class="fa-brands fa-google mr-1"></i> Vlastník: přihlásit přes Google</button>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="app-container" class="w-full max-w-2xl min-h-screen border-x border-[#2f3336] flex flex-col pb-24 hidden relative bg-black">
+        
+        <!-- Header -->
+        <header class="sticky top-0 z-40 glass-header border-b border-[#2f3336] px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img id="header-avatar" src="" class="w-10 h-10 rounded-full object-cover border border-[#2f3336] shadow-sm">
+                <div>
+                    <h2 id="header-title" class="font-extrabold text-lg text-white leading-tight tracking-tight">Flex od bubble</h2>
+                    <p id="header-subtitle" class="text-xs text-[#71767b] handle-display font-medium"></p>
+                </div>
+            </div>
+            <button onclick="window.openAccountSwitcher()" class="bg-[#16181c] hover:bg-[#202327] border border-[#2f3336] text-xs font-bold px-4 py-2 rounded-full text-white transition flex items-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-users"></i>
+                <span class="hidden sm:inline">Změnit účet</span>
+            </button>
+        </header>
+
+        <main class="flex-1">
+            <!-- TAB: HOME -->
+            <section id="tab-home" class="tab-content animate-fade">
+                <div class="flex border-b border-[#2f3336] text-sm font-bold text-[#71767b] glass-header sticky top-[65px] z-30">
+                    <button id="feed-filter-all" onclick="window.setFeedFilter('all')" class="flex-1 py-3.5 text-center border-b-4 border-brand text-white transition cursor-pointer">Pro vás</button>
+                    <button id="feed-filter-following" onclick="window.setFeedFilter('following')" class="flex-1 py-3.5 text-center border-b-4 border-transparent hover:bg-[#16181c]/50 transition cursor-pointer">Sledovaní</button>
+                </div>
+
+                <div class="p-4 border-b border-[#2f3336] bg-black">
+                    <div class="flex gap-3">
+                        <img id="compose-avatar" src="" class="w-11 h-11 rounded-full object-cover flex-shrink-0">
+                        <div class="flex-1">
+                            <textarea id="post-text" rows="2" placeholder="Co se právě děje?" class="w-full bg-transparent text-white placeholder-[#71767b] focus:outline-none resize-none text-lg"></textarea>
+                            <input type="text" id="post-image" placeholder="Odkaz na obrázek (nepovinné URL)..." class="w-full bg-[#16181c] border border-[#2f3336] rounded-xl px-3 py-2.5 text-sm text-white placeholder-[#71767b] focus:outline-none focus:border-brand mb-3 hidden">
+                            <div class="flex items-center justify-between pt-3 border-t border-[#2f3336]/60">
+                                <button type="button" onclick="document.getElementById('post-image').classList.toggle('hidden')" class="text-brand hover:bg-brand/10 p-2.5 rounded-full transition text-base cursor-pointer">
+                                    <i class="fa-solid fa-image"></i>
+                                </button>
+                                <button type="button" onclick="window.submitPost()" class="bg-brand hover:bg-brand-hover text-white font-bold px-6 py-2 rounded-full text-sm transition shadow-md cursor-pointer">Publikovat</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="posts-feed" class="divide-y divide-[#2f3336]"></div>
+            </section>
+
+            <!-- TAB: MESSAGES -->
+            <section id="tab-messages" class="tab-content animate-fade hidden">
+                <div class="p-4 border-b border-[#2f3336] bg-[#16181c]/80 sticky top-[65px] z-30 glass-header">
+                    <div class="flex items-center bg-black border border-[#2f3336] rounded-xl px-4 py-2.5 focus-within:border-brand transition">
+                        <i class="fa-solid fa-magnifying-glass text-[#71767b] mr-2"></i>
+                        <input type="text" id="dm-recipient" oninput="window.renderMessages()" placeholder="Zadejte @handle příjemce zprávy..." class="w-full bg-transparent text-sm text-white focus:outline-none">
+                    </div>
+                </div>
+                <div id="messages-container" class="p-4 space-y-4 min-h-[400px] flex flex-col justify-end"></div>
+                <div class="p-4 border-t border-[#2f3336] bg-black sticky bottom-[60px]">
+                    <div class="flex gap-2">
+                        <input type="text" id="dm-input" placeholder="Napište zprávu..." class="flex-1 bg-[#16181c] border border-[#2f3336] rounded-full px-5 py-3 text-sm text-white focus:outline-none focus:border-brand transition">
+                        <button type="button" onclick="window.submitMessage()" class="bg-brand text-white w-12 h-12 rounded-full font-bold flex items-center justify-center hover:bg-brand-hover transition cursor-pointer">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: VERIFICATION -->
+            <section id="tab-verify" class="tab-content animate-fade p-4 hidden">
+                <div class="bg-gradient-to-br from-[#16181c] to-black border border-[#2f3336] rounded-3xl p-6 mb-6 shadow-xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-6 opacity-10 text-brand text-6xl pointer-events-none"><i class="fa-solid fa-certificate"></i></div>
+                    <h3 class="text-xl font-extrabold text-white mb-2 relative z-10">Získejte ověřený odznak</h3>
+                    <p class="text-sm text-[#71767b] mb-6 relative z-10">Přidejte se k elitě Flex od bubble. Napište nám, proč byste měli získat odznak a počkejte na schválení.</p>
+                    <div class="space-y-4 relative z-10">
+                        <textarea id="verify-reason" rows="4" placeholder="Kdo jste a proč odznak potřebujete?..." class="w-full bg-black border border-[#2f3336] rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-brand resize-none"></textarea>
+                        <button type="button" onclick="window.submitVerification()" class="w-full bg-white text-black hover:bg-[#e2e8f0] font-extrabold py-3.5 rounded-2xl text-sm transition cursor-pointer">Odeslat žádost</button>
+                    </div>
+                </div>
+                <div id="verify-status-box"></div>
+            </section>
+
+            <!-- TAB: DEV HUB -->
+            <section id="tab-dev" class="tab-content animate-fade p-4 hidden">
+                <div class="bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/30 rounded-3xl p-6 mb-6">
+                    <h3 class="text-xl font-extrabold text-amber-400 flex items-center gap-2 mb-1">
+                        <i class="fa-solid fa-code"></i>
+                        <span>Developer & Owner Console</span>
+                    </h3>
+                    <p class="text-sm text-[#71767b]">Vítejte v řídícím centru, Vlastníku. Odtud ovládáte celou síť.</p>
+                </div>
+                <div class="space-y-8">
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-[#71767b] mb-3 flex items-center gap-2"><i class="fa-solid fa-users-gear"></i> Příchozí žádosti o odznak</h4>
+                        <div id="dev-requests-container" class="space-y-3"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-[#71767b] mb-3 flex items-center gap-2"><i class="fa-solid fa-user-shield"></i> Všichni uživatelé na tvé síti</h4>
+                        <p class="text-xs text-[#71767b] mb-3">Dokonalý přehled, správa BANů a Dev práv.</p>
+                        <div id="dev-all-users-container" class="space-y-3"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: PROFILE -->
+            <section id="tab-profile" class="tab-content animate-fade hidden">
+                <div class="h-40 bg-gradient-to-r from-brand/20 via-purple-600/20 to-amber-500/20 relative border-b border-[#2f3336]">
+                    <img id="profile-banner-avatar" src="" class="w-24 h-24 rounded-full border-4 border-black object-cover absolute -bottom-12 left-4 shadow-2xl">
+                </div>
+                <div class="px-4 pt-16 pb-6 border-b border-[#2f3336]">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h2 id="profile-fullname" class="text-2xl font-extrabold text-white flex items-center gap-1.5"></h2>
+                            <p id="profile-handle" class="text-sm text-[#71767b] handle-display mt-0.5"></p>
+                        </div>
+                        <button onclick="window.openBioModal()" class="bg-transparent hover:bg-[#16181c] border border-[#2f3336] text-white font-bold px-4 py-1.5 rounded-full text-sm transition cursor-pointer">Upravit profil</button>
+                    </div>
+                    <p id="profile-bio" class="text-sm text-[#e7e9ea] mt-4 whitespace-pre-wrap"></p>
+                    <div class="flex items-center gap-5 mt-4 text-sm text-[#71767b]">
+                        <div><strong id="profile-following-count" class="text-white">0</strong> Sledování</div>
+                        <div><strong id="profile-followers-count" class="text-white">0</strong> Sledujících</div>
+                    </div>
+                </div>
+                <div id="owner-badge-manager" class="p-4 hidden">
+                    <div class="bg-[#16181c] border border-[#2f3336] rounded-2xl p-5">
+                        <h4 class="text-white font-bold text-sm mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-palette text-brand"></i> Nastavit si svůj odznak
+                        </h4>
+                        <div id="badge-color-buttons" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Nav -->
+        <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-8 py-3 flex justify-between items-center z-40 pb-safe">
+            <button onclick="window.switchTab('home')" class="nav-btn text-brand hover:text-white p-2 text-2xl transition cursor-pointer" data-tab="home"><i class="fa-solid fa-house"></i></button>
+            <button onclick="window.switchTab('messages')" class="nav-btn text-[#71767b] hover:text-white p-2 text-2xl transition cursor-pointer" data-tab="messages"><i class="fa-solid fa-envelope"></i></button>
+            <button onclick="window.switchTab('verify')" class="nav-btn text-[#71767b] hover:text-white p-2 text-2xl transition cursor-pointer" data-tab="verify"><i class="fa-solid fa-certificate"></i></button>
+            <button onclick="window.switchTab('dev')" class="nav-btn text-[#71767b] hover:text-amber-400 p-2 text-2xl transition hidden cursor-pointer" id="nav-dev-li" data-tab="dev"><i class="fa-solid fa-code"></i></button>
+            <button onclick="window.switchTab('profile')" class="nav-btn text-[#71767b] hover:text-white p-2 text-2xl transition cursor-pointer" data-tab="profile"><i class="fa-solid fa-user"></i></button>
+        </nav>
+    </div>
+
+    <!-- MODAL: BIO -->
+    <div id="bio-modal" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#16181c] border border-[#2f3336] rounded-3xl p-6 max-w-sm w-full animate-fade">
+            <h3 class="text-xl font-bold text-white mb-4">Upravit profil</h3>
+            <textarea id="bio-input" rows="4" class="w-full bg-black border border-[#2f3336] rounded-xl p-4 text-sm text-white focus:outline-none focus:border-brand mb-4 resize-none" placeholder="Napište něco o sobě..."></textarea>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="document.getElementById('bio-modal').classList.add('hidden')" class="px-5 py-2.5 rounded-xl text-sm font-bold text-[#71767b] hover:text-white cursor-pointer">Zrušit</button>
+                <button type="button" onclick="window.saveBio()" class="px-6 py-2.5 rounded-xl bg-white text-black font-extrabold text-sm hover:bg-[#e2e8f0] cursor-pointer">Uložit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: COMMENTS -->
+    <div id="comment-modal" class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#16181c] border border-[#2f3336] rounded-3xl p-0 max-w-lg w-full flex flex-col max-h-[85vh] animate-fade shadow-2xl">
+            <div class="flex justify-between items-center p-5 border-b border-[#2f3336]">
+                <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-comment text-brand"></i> Komentáře
+                </h3>
+                <button type="button" onclick="window.closeComments()" class="text-[#71767b] hover:text-white w-8 h-8 rounded-full hover:bg-[#2f3336] flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="comments-list" class="flex-1 overflow-y-auto p-5 space-y-4 divide-y divide-[#2f3336]/40 no-scrollbar"></div>
+            <div class="p-4 border-t border-[#2f3336] bg-black rounded-b-3xl">
+                <div class="flex gap-2">
+                    <textarea id="comment-input" rows="1" placeholder="Odpovězte..." class="flex-1 bg-[#16181c] border border-[#2f3336] rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand resize-none"></textarea>
+                    <button type="button" onclick="window.submitComment()" class="bg-brand text-white px-5 rounded-2xl font-bold text-sm hover:bg-brand-hover transition cursor-pointer"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const safeStorage = {
+            get: (k) => { try { return localStorage.getItem(k); } catch(e) { return null; } },
+            set: (k, v) => { try { localStorage.setItem(k, v); } catch(e) {} }
+        };
+
+        window.DB = { posts: [], msgs: [], verifs: [], users: [], comments: [], badges: {}, bios: {}, bans: {}, devs: {}, follows: {} };
+
+        // PRECISNI 20-CÍPY ORIGINÁLNÍ X/TWITTER BADGE SVG
+        const getOfficialBadgeSVG = (colorClass) => `
+            <svg viewBox="0 0 24 24" class="w-[1.15rem] h-[1.15rem] inline-block ml-0.5 align-text-bottom ${colorClass}">
+                <path fill="currentColor" d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.918-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.337 2.25c-.416-.165-.866-.25-1.336-.25-2.21 0-3.918 1.79-3.918 4 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.46.733 2.73 1.83 3.44-.06.26-.09.53-.09.81 0 2.21 1.71 4 3.918 4 .44 0 .86-.07 1.25-.21.54 1.34 1.85 2.26 3.415 2.26 1.56 0 2.875-.92 3.415-2.26.39.14.81.21 1.25.21 2.21 0 3.918-1.79 3.918-4 0-.28-.03-.55-.09-.81 1.096-.71 1.83-1.98 1.83-3.44z"></path>
+                <path fill="#ffffff" stroke="#ffffff" stroke-width="0.75" d="M10.24 16.516l-3.32-3.32 1.414-1.414 1.906 1.906 5.25-5.25 1.414 1.414-6.664 6.664z"></path>
+            </svg>
+        `;
+
+        const BADGES_SVG = {
+            gold: getOfficialBadgeSVG('text-amber-400'),
+            blue: getOfficialBadgeSVG('text-[#1d9bf0]'),
+            purple: getOfficialBadgeSVG('text-purple-500'),
+            green: getOfficialBadgeSVG('text-emerald-500')
+        };
+        window.getBadgeIcon = (type) => BADGES_SVG[type] || '';
+
+        window.showToast = (msg, isError = false) => {
+            const container = document.getElementById('toast-container');
+            if(!container) return;
+            const toast = document.createElement('div');
+            toast.className = `px-5 py-3 rounded-2xl text-sm font-bold text-white shadow-2xl transition-all duration-300 transform -translate-y-10 opacity-0 flex items-center justify-center text-center ${isError ? 'bg-red-500' : 'bg-brand'}`;
+            toast.innerHTML = `<i class="fa-solid ${isError ? 'fa-circle-exclamation' : 'fa-circle-check'} mr-2 text-lg"></i> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('-translate-y-10', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('-translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        const appId = 'flex-bubble-prod-v10';
+        const firebaseConfig = {"apiKey": "AIzaSyBovG00qfDWUBcS9pJlS_FwOH4etF9Sv0Y", "authDomain": "flex-bubble.firebaseapp.com", "projectId": "flex-bubble", "storageBucket": "flex-bubble.firebasestorage.app", "messagingSenderId": "171220277752", "appId": "1:171220277752:web:d5d68647bf1759db58de0d"};
+
+        window.db = null;
+        window.auth = null;
+        window.currentUser = null;
+        window.activeFeedFilter = 'all';
+        window.activePostForComments = null;
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            window.db = getFirestore(app);
+            window.auth = getAuth(app);
+        } catch(e) { console.error("Firebase Init Error:", e); }
+
+        window.getDict = (key) => window.DB[key] || {};
+
+        window.checkIsOwner = (user) => {
+            if (!user) return false;
+            if (window.isOwnerSession === true && user.handle === 'Flex') return true;
+            return window.getDict('devs')[user.handle] === true;
+        };
+
+        window.checkBanStatus = (handle) => {
+            let bans = window.getDict('bans');
+            let expire = bans[handle];
+            if (expire && expire > Date.now()) {
+                let mins = Math.ceil((expire - Date.now()) / 60000);
+                window.showToast(`Zablokováno! Zbývá: ${mins > 500000 ? 'Navždy' : mins + ' minut'}.`, true);
+                window.openAccountSwitcher(); 
+                return true;
+            }
+            return false;
+        };
+
+
+        // PŘIHLÁŠENÍ VLASTNÍKA PŘES GOOGLE (žádné heslo v kódu)
+        const OWNER_EMAIL = 'mrwolfvrcz@gmail.com';
+        window.ownerGoogleLogin = async () => {
+            try {
+                const res = await signInWithPopup(window.auth, new GoogleAuthProvider());
+                const u = res.user;
+                if (!u || u.email !== OWNER_EMAIL || !u.emailVerified) {
+                    await signOut(window.auth);
+                    window.showToast('Tenhle Google účet není vlastník Flexu.', true);
+                    return;
+                }
+                window.isOwnerSession = true;
+                window.currentUser = { fullname: 'Flex od bubble', handle: 'Flex', email: u.email,
+                    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=Flex' };
+                try {
+                    await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'users', 'Flex'), window.currentUser);
+                    await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'badges'), { Flex: 'gold' }, { merge: true });
+                    await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'devs'), { Flex: true }, { merge: true });
+                } catch(e) { console.warn(e); }
+                window.initCloudSync();
+                window.showToast('Vítej zpět, šéfe!');
+                window.finishLogin();
+            } catch (e) {
+                console.error(e);
+                window.showToast('Google přihlášení se nepovedlo.', true);
+            }
+        };
+
+        // HLAVNÍ PŘIHLÁŠENÍ - NESTROPITELNÉ A BEZ CHYBOVÝCH HLÁŠENÍ FIREBASE
+        window.handleLoginAction = async () => {
+            try {
+                const fullnameInput = document.getElementById('auth-fullname');
+                const handleInput = document.getElementById('auth-handle');
+                const emailInput = document.getElementById('auth-email');
+                const passInput = document.getElementById('auth-pass');
+                const btnText = document.getElementById('auth-btn-text');
+                const btnIcon = document.getElementById('auth-btn-icon');
+
+                const fullname = fullnameInput ? fullnameInput.value.trim() : '';
+                const handle = handleInput ? handleInput.value.trim().replace('@', '') : '';
+                const email = emailInput ? emailInput.value.trim() : '';
+                const pass = passInput ? passInput.value.trim() : '';
+
+                if (!fullname || !handle || !email || !pass) {
+                    window.showToast('Vyplňte prosím všechna pole!', true);
+                    return;
+                }
+
+                if (btnText) btnText.innerText = "Načítám...";
+                if (btnIcon) btnIcon.className = "fa-solid fa-spinner fa-spin text-xs";
+
+                // Tichý pokus o anonymní auth (pokud selže, nevadí - pokračujeme!)
+                if (window.auth) {
+                    try { await signInAnonymously(window.auth); } catch(e) {}
+                }
+
+                const isMain = false;
+                if (handle.toLowerCase() === 'flex') {
+                    window.showToast('Tohle jméno je rezervované pro vlastníka.', true);
+                    if (btnText) btnText.innerText = "Přihlásit se / Vytvořit";
+                    if (btnIcon) btnIcon.className = "fa-solid fa-arrow-right text-xs";
+                    return;
+                }
+                window.isOwnerSession = false;
+                
+                if (!isMain && !window.getDict('devs')[handle] && window.checkBanStatus(handle)) {
+                    if (btnText) btnText.innerText = "Přihlásit se / Vytvořit";
+                    if (btnIcon) btnIcon.className = "fa-solid fa-arrow-right text-xs";
+                    return;
+                }
+
+                window.currentUser = {
+                    fullname: isMain ? 'Flex od bubble' : fullname,
+                    handle: isMain ? 'Flex' : handle,
+                    email: email,
+                    avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${isMain ? 'Flex' : handle}`
+                };
+
+                let saved = [];
+                try { saved = JSON.parse(safeStorage.get('flex_accs') || '[]'); } catch(e){}
+                saved = saved.filter(a => a.handle !== window.currentUser.handle);
+                saved.unshift(window.currentUser);
+                safeStorage.set('flex_accs', JSON.stringify(saved));
+
+                // Cloudový zápis (pokud je připojen)
+                if (window.db) {
+                    try {
+                        const uRef = doc(window.db, 'artifacts', appId, 'public', 'data', 'users', window.currentUser.handle);
+                        await setDoc(uRef, window.currentUser);
+
+                        if (isMain) {
+                            let b = window.getDict('badges');
+                            b[window.currentUser.handle] = 'gold'; 
+                            await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'badges'), b); 
+
+                            let d = window.getDict('devs');
+                            d[window.currentUser.handle] = true; 
+                            await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'devs'), d); 
+                        }
+                    } catch(dbErr) { console.warn("Cloud save skipped, running local mode."); }
+                    window.initCloudSync();
+                } else {
+                    // Fallback local badge setup pro dev
+                    if (isMain) {
+                        window.DB.badges['Flex'] = 'gold';
+                        window.DB.devs['Flex'] = true;
+                    }
+                }
+
+                window.showToast('Úspěšně přihlášeno!');
+                window.finishLogin();
+
+            } catch(err) {
+                console.error("Login err:", err);
+                window.showToast('Přihlášení se nepovedlo, zkus to znovu.', true);
+            }
+        };
+
+        window.finishLogin = () => {
+            document.getElementById('auth-wrapper').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            document.getElementById('header-avatar').src = window.currentUser.avatar;
+            document.getElementById('compose-avatar').src = window.currentUser.avatar;
+            document.querySelectorAll('.handle-display').forEach(el => el.textContent = `@${window.currentUser.handle}`);
+
+            // Vždy nastavit zlatý odznak a dev práva pro hlavního vlastníka
+            if (window.isOwnerSession === true) {
+                window.DB.badges['Flex'] = 'gold';
+                window.DB.devs['Flex'] = true;
+            }
+
+            // Uložit aktuálního uživatele do seznamu uživatelů DB, pokud tam není
+            if (!window.DB.users.find(u => u.handle === window.currentUser.handle)) {
+                window.DB.users.push(window.currentUser);
+            }
+
+            if (window.checkIsOwner(window.currentUser)) {
+                document.getElementById('nav-dev-li').classList.remove('hidden');
+                document.getElementById('owner-badge-manager').classList.remove('hidden');
+            } else {
+                document.getElementById('nav-dev-li').classList.add('hidden');
+                document.getElementById('owner-badge-manager').classList.add('hidden');
+            }
+
+            // Inicializace dat Bubble účtu a synch
+            window.initBubbleAccount();
+            window.switchTab('home');
+            window.triggerUpdate();
+        };
+
+        window.openAccountSwitcher = () => {
+            window.currentUser = null;
+            document.getElementById('app-container').classList.add('hidden');
+            document.getElementById('auth-wrapper').classList.remove('hidden');
+            
+            let list = [];
+            try { list = JSON.parse(safeStorage.get('flex_accs') || '[]'); } catch(e){}
+            
+            let box = document.getElementById('saved-accounts-section');
+            let container = document.getElementById('saved-accounts-list');
+            
+            if (list.length === 0) { box.classList.add('hidden'); return; }
+            box.classList.remove('hidden');
+            container.innerHTML = list.map(acc => `
+                <div onclick="window.selectAccount('${acc.handle}')" class="flex items-center justify-between p-3 bg-black border border-[#2f3336] rounded-2xl hover:border-brand cursor-pointer transition">
+                    <div class="flex items-center gap-3">
+                        <img src="${acc.avatar}" class="w-10 h-10 rounded-full object-cover">
+                        <div>
+                            <div class="font-bold text-sm text-white">${acc.fullname}</div>
+                            <div class="text-xs text-[#71767b]">@${acc.handle}</div>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-sm text-[#71767b]"></i>
+                </div>
+            `).join('');
+        };
+
+        window.selectAccount = (handle) => {
+            try {
+                let list = JSON.parse(safeStorage.get('flex_accs') || '[]');
+                let acc = list.find(a => a.handle === handle);
+                if (handle === 'Flex') { window.ownerGoogleLogin(); return; }
+                if (acc && !window.checkBanStatus(acc.handle)) {
+                    window.isOwnerSession = false;
+                    window.currentUser = acc;
+                    (async () => {
+                        if (window.auth) { try { await signInAnonymously(window.auth); } catch(e) {} }
+                        window.initCloudSync();
+                        window.finishLogin();
+                    })();
+                }
+            } catch(e) {}
+        };
+
+        window.initBubbleAccount = async () => {
+            const bUser = { fullname: 'Bubble Official', handle: 'bubble', email: 'hello@bubble.io', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=bubble' };
+            
+            // Zajistit, že uvidíš uživatele Bubble i Flex v seznamu uživatelů
+            if (!window.DB.users.find(u => u.handle === 'bubble')) {
+                window.DB.users.push(bUser);
+            }
+            if (window.currentUser && !window.DB.users.find(u => u.handle === window.currentUser.handle)) {
+                window.DB.users.push(window.currentUser);
+            }
+
+            const msgs = [
+                {t: "Vítejte na Flex od bubble! Právě jsme překonali hranici 1 milionu uživatelů! Děkujeme, že jste s námi. 🎉", img: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800"},
+                {t: "Představujeme Ninomi 2.0 🧠 - Náš nejnovější AI model, který je o 400% rychlejší a chápe kontext lépe než kdy dříve.", img: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=800"},
+                {t: "Bubble Prism 1.1 je venku! 🌈 Nová aktualizace přináší revoluční úpravy fotek přímo v prohlížeči.", img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800"},
+                {t: "Spouštíme Bubble Vision API 👁️ - Rozpoznávání obrazu v reálném čase pro všechny vývojáře.", img: "https://images.unsplash.com/photo-1507146426996-ef05306b995a?auto=format&fit=crop&q=80&w=800"},
+                {t: "Flex od bubble přechází na nový luxusní design. Jak se vám líbí? 💎", img: ""},
+                {t: "Nový nástroj pro tvůrce obsahu je nyní v beta verzi! Zjistěte více na našem webu. 🚀", img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800"},
+                {t: "Děkujeme všem za fantastickou zpětnou vazbu k aktualizaci 2.4! 🌟", img: ""},
+                {t: "Představujeme Bubble Cloud Secure 🔒 - Nejbezpečnější úložiště pro vaše data.", img: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=800"},
+                {t: "Chystáme pro vás exkluzivní živý stream s vývojářským týmem! Sledujte nás. 🎙️", img: ""},
+                {t: "Budoucnost je tady. Vítejte v rodině Bubble! ✨", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800"}
+            ];
+
+            // Vždy nastavit odznak pro Bubble a nahrát příspěvky do lokální i cloudové DB
+            window.DB.badges['bubble'] = 'gold';
+            if (!window.DB.posts || window.DB.posts.length === 0) {
+                window.DB.posts = msgs.map((m, i) => ({ 
+                    id: `b_${i}`, 
+                    authorName: 'Bubble Official', 
+                    authorHandle: 'bubble', 
+                    authorAvatar: bUser.avatar, 
+                    text: m.t, 
+                    imageUrl: m.img, 
+                    time: Date.now() - (10-i)*1000, 
+                    likes: [] 
+                }));
+            }
+
+            if(window.db) {
+                try {
+                    const bubbleRef = doc(window.db, 'artifacts', appId, 'public', 'data', 'users', 'bubble');
+                    const snap = await getDoc(bubbleRef);
+                    if (!snap.exists()) {
+                        await setDoc(bubbleRef, bUser);
+                        let b = window.getDict('badges'); b['bubble'] = 'gold';
+                        await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'badges'), b);
+                        const postsCol = collection(window.db, 'artifacts', appId, 'public', 'data', 'posts');
+                        for (let i=0; i<msgs.length; i++) {
+                            await setDoc(doc(postsCol), { authorName: 'Bubble Official', authorHandle: 'bubble', authorAvatar: bUser.avatar, text: msgs[i].t, imageUrl: msgs[i].img, time: Date.now() - (10-i)*1000, likes: [] });
+                        }
+                    }
+                } catch(e){}
+            }
+            window.triggerUpdate();
+        };
+
+        let isCloudInited = false;
+        window.initCloudSync = () => {
+            if(!window.db || isCloudInited) return;
+            isCloudInited = true;
+
+            const listenGlobal = (name) => {
+                try {
+                    onSnapshot(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', name), (snap) => {
+                        window.DB[name] = snap.data() || {};
+                        window.triggerUpdate();
+                    }, (e) => {});
+                } catch(e){}
+            };
+            listenGlobal('badges'); listenGlobal('bios'); listenGlobal('bans'); listenGlobal('devs'); listenGlobal('follows');
+
+            try {
+                onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'posts'), (s) => {
+                    window.DB.posts = s.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => b.time - a.time);
+                    window.triggerUpdate();
+                }, (e)=>{});
+                
+                onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'messages'), (s) => {
+                    window.DB.msgs = s.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => a.time - b.time);
+                    window.triggerUpdate();
+                }, (e)=>{});
+                
+                onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'comments'), (s) => {
+                    window.DB.comments = s.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => a.time - b.time);
+                    window.triggerUpdate();
+                }, (e)=>{});
+                
+                onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'verifications'), (s) => {
+                    window.DB.verifs = s.docs.map(d => ({id: d.id, ...d.data()}));
+                    window.triggerUpdate();
+                }, (e)=>{});
+                
+                onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'users'), (s) => {
+                    window.DB.users = s.docs.map(d => ({id: d.id, ...d.data()}));
+                    window.triggerUpdate();
+                }, (e)=>{});
+            } catch(e){}
+
+            setTimeout(window.initBubbleAccount, 1000); 
+        };
+
+        window.triggerUpdate = () => {
+            if (!window.currentUser) return;
+            if (window.checkBanStatus(window.currentUser.handle)) return; 
+            
+            window.renderPosts();
+            window.renderMessages();
+            window.renderVerificationUI();
+            if (window.checkIsOwner(window.currentUser)) { window.renderDevRequests(); window.renderDevUsers(); }
+            window.renderProfile();
+            if (window.activePostForComments) window.renderCommentsList();
+        };
+
+        window.renderPosts = () => {
+            const container = document.getElementById('posts-feed');
+            let posts = window.DB.posts || [];
+            const myFollows = window.getDict('follows')[window.currentUser.handle] || [];
+            if (window.activeFeedFilter === 'following') posts = posts.filter(p => p.authorHandle === window.currentUser.handle || myFollows.includes(p.authorHandle));
+            
+            if (posts.length === 0) { container.innerHTML = `<div class="p-10 text-center text-[#71767b] text-sm font-medium">Zatím žádné příspěvky.</div>`; return; }
+
+            const badges = window.getDict('badges');
+            const comments = window.DB.comments || [];
+
+            container.innerHTML = posts.map(p => {
+                const isLiked = (p.likes || []).includes(window.currentUser.handle);
+                const isFollowed = myFollows.includes(p.authorHandle);
+                const cCount = comments.filter(c => c.postId === p.id).length;
+                return `
+                <div class="p-4 sm:p-5 flex gap-3 hover:bg-[#16181c]/30 transition border-b border-[#2f3336] last:border-0">
+                    <img src="${p.authorAvatar}" class="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-[#2f3336]">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1 text-sm font-bold text-white truncate">
+                                <span class="truncate">${p.authorName || 'Neznámý'}</span> ${window.getBadgeIcon(badges[p.authorHandle])}
+                                <span class="text-[#71767b] font-normal ml-1 truncate">@${p.authorHandle}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                ${p.authorHandle !== window.currentUser.handle ? `
+                                <button onclick="window.toggleFollow('${p.authorHandle}')" class="text-xs px-3 py-1 rounded-full border ${isFollowed ? 'border-[#2f3336] text-[#71767b]' : 'border-white text-black bg-white'} font-bold transition cursor-pointer">
+                                    ${isFollowed ? 'Sledováno' : 'Sledovat'}
+                                </button>` : ''}
+                                ${(p.authorHandle === window.currentUser.handle || window.checkIsOwner(window.currentUser)) ? `<button onclick="window.deletePost('${p.id}')" class="text-[#71767b] hover:text-red-500 transition text-sm px-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>` : ''}
+                            </div>
+                        </div>
+                        <p class="text-[15px] text-[#e7e9ea] mt-1.5 whitespace-pre-wrap leading-relaxed">${p.text}</p>
+                        ${p.imageUrl ? `<img src="${p.imageUrl}" class="mt-3 rounded-2xl w-full object-cover max-h-96 border border-[#2f3336]" onerror="this.style.display='none'">` : ''}
+                        <div class="flex gap-8 mt-3.5 text-[#71767b] text-[13px] items-center font-semibold">
+                            <button onclick="window.openComments('${p.id}')" class="flex items-center gap-2 hover:text-brand transition group cursor-pointer">
+                                <div class="w-8 h-8 rounded-full group-hover:bg-brand/10 flex items-center justify-center -ml-2 transition"><i class="fa-solid fa-comment"></i></div>
+                                <span class="-ml-1">${cCount}</span>
+                            </button>
+                            <button onclick="window.toggleLike('${p.id}')" class="flex items-center gap-2 hover:text-pink-500 transition group ${isLiked?'text-pink-500':''} cursor-pointer">
+                                <div class="w-8 h-8 rounded-full group-hover:bg-pink-500/10 flex items-center justify-center -ml-2 transition"><i class="fa-solid fa-heart ${isLiked?'text-pink-500':''}"></i></div>
+                                <span class="-ml-1">${(p.likes||[]).length}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        };
+
+        window.toggleFollow = async (targetHandle) => {
+            let f = window.getDict('follows'), myF = f[window.currentUser.handle] || [];
+            f[window.currentUser.handle] = myF.includes(targetHandle) ? myF.filter(h => h !== targetHandle) : [...myF, targetHandle];
+            window.triggerUpdate(); // Okamžitá reakce UI
+            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'follows'), f); } catch(e) {} }
+        };
+
+        window.toggleLike = async (postId) => {
+            let p = window.DB.posts.find(x => x.id === postId);
+            if(!p) return;
+            let l = p.likes || [];
+            p.likes = l.includes(window.currentUser.handle) ? l.filter(h => h !== window.currentUser.handle) : [...l, window.currentUser.handle];
+            window.triggerUpdate(); // Okamžitá reakce UI
+            if(window.db) { try { await updateDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'posts', p.id), { likes: p.likes }); } catch(e) {} }
+        };
+
+        window.deletePost = async (postId) => {
+            window.DB.posts = window.DB.posts.filter(x => x.id !== postId);
+            window.triggerUpdate();
+            if(window.db) { try { await deleteDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'posts', postId)); window.showToast('Smazáno'); } catch(e) {} }
+        };
+
+        window.openComments = (postId) => {
+            window.activePostForComments = postId;
+            document.getElementById('comment-modal').classList.remove('hidden');
+            window.renderCommentsList();
+        };
+
+        window.closeComments = () => {
+            window.activePostForComments = null;
+            document.getElementById('comment-modal').classList.add('hidden');
+        };
+
+        window.renderCommentsList = () => {
+            const container = document.getElementById('comments-list');
+            if(!window.activePostForComments) return;
+            const comments = (window.DB.comments || []).filter(c => c.postId === window.activePostForComments);
+            if(comments.length === 0) { container.innerHTML = `<div class="text-center text-[#71767b] py-6 text-sm font-medium">Žádné komentáře. Napište první!</div>`; return; }
+            const badges = window.getDict('badges');
+            container.innerHTML = comments.map(c => `
+                <div class="pt-4 first:pt-0 flex gap-3">
+                    <img src="${c.authorAvatar}" class="w-8 h-8 rounded-full object-cover border border-[#2f3336]">
+                    <div class="flex-1 min-w-0 bg-[#16181c] rounded-2xl rounded-tl-sm p-3.5 border border-[#2f3336]">
+                        <div class="flex items-center gap-1 text-[13px] font-bold text-white">
+                            <span>${c.authorName}</span> ${window.getBadgeIcon(badges[c.authorHandle])}
+                        </div>
+                        <p class="text-sm text-[#e7e9ea] mt-1 whitespace-pre-wrap">${c.text}</p>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        window.submitComment = async () => {
+            if (!window.activePostForComments || window.checkBanStatus(window.currentUser.handle)) return;
+            const t = document.getElementById('comment-input').value.trim();
+            if (!t) return;
+            
+            const newComment = { postId: window.activePostForComments, authorName: window.currentUser.fullname, authorHandle: window.currentUser.handle, authorAvatar: window.currentUser.avatar, text: t, time: Date.now() };
+            window.DB.comments = window.DB.comments || [];
+            window.DB.comments.push(newComment);
+            document.getElementById('comment-input').value = '';
+            window.triggerUpdate(); // Okamžitá reakce UI
+
+            if(window.db) {
+                try { await setDoc(doc(collection(window.db, 'artifacts', appId, 'public', 'data', 'comments')), newComment); } catch(e) {}
+            }
+        };
+
+        window.renderMessages = () => {
+            const container = document.getElementById('messages-container'), r = document.getElementById('dm-recipient').value.trim().replace('@', '');
+            if (!r) { container.innerHTML = `<div class="text-center text-[#71767b] py-10 text-sm font-medium">Zadejte komu chcete napsat.</div>`; return; }
+            const chat = (window.DB.msgs || []).filter(m => (m.sender === window.currentUser.handle && m.recipient === r) || (m.sender === r && m.recipient === window.currentUser.handle));
+            if (chat.length === 0) { container.innerHTML = `<div class="text-center text-[#71767b] py-10 text-sm font-medium">Napište první zprávu.</div>`; return; }
+            container.innerHTML = chat.map(m => {
+                const isMe = m.sender === window.currentUser.handle;
+                return `
+                <div class="flex ${isMe ? 'justify-end' : 'justify-start'} animate-fade">
+                    <div class="max-w-[80%] px-4 py-2.5 rounded-2xl text-[15px] shadow-sm ${isMe ? 'bg-brand text-white rounded-br-sm' : 'bg-[#16181c] text-[#e7e9ea] border border-[#2f3336] rounded-bl-sm'}">${m.text}</div>
+                </div>`;
+            }).join('');
+        };
+
+        window.submitMessage = async () => {
+            if (window.checkBanStatus(window.currentUser.handle)) return;
+            const t = document.getElementById('dm-input').value.trim(), r = document.getElementById('dm-recipient').value.trim().replace('@', '');
+            if (!t || !r) return;
+            
+            const newMsg = { sender: window.currentUser.handle, recipient: r, text: t, time: Date.now() };
+            window.DB.msgs = window.DB.msgs || [];
+            window.DB.msgs.push(newMsg);
+            document.getElementById('dm-input').value = '';
+            window.triggerUpdate(); // Okamžitá reakce UI
+
+            if(window.db) {
+                try { await setDoc(doc(collection(window.db, 'artifacts', appId, 'public', 'data', 'messages')), newMsg); } catch(e) {}
+            }
+        };
+
+        window.renderVerificationUI = () => {
+            const box = document.getElementById('verify-status-box');
+            if (window.getDict('badges')[window.currentUser.handle]) box.innerHTML = `<div class="bg-brand/10 border border-brand/30 rounded-2xl p-4 text-center text-brand font-bold text-sm shadow-inner">Jste plně ověřen(a)! ${window.getBadgeIcon(window.getDict('badges')[window.currentUser.handle])}</div>`;
+            else if ((window.DB.verifs || []).find(v => v.handle === window.currentUser.handle)) box.innerHTML = `<div class="bg-[#16181c] border border-[#2f3336] rounded-2xl p-4 text-center text-[#71767b] text-sm">Žádost čeká na schválení.</div>`;
+            else box.innerHTML = '';
+        };
+
+        window.submitVerification = async () => {
+            if (window.checkBanStatus(window.currentUser.handle)) return;
+            const r = document.getElementById('verify-reason').value.trim();
+            if (!r) return;
+            const reqId = `${window.currentUser.handle}_${Date.now()}`;
+            
+            const newReq = { id: reqId, handle: window.currentUser.handle, fullname: window.currentUser.fullname, avatar: window.currentUser.avatar, reason: r, time: Date.now() };
+            window.DB.verifs = window.DB.verifs || [];
+            window.DB.verifs.push(newReq);
+            document.getElementById('verify-reason').value = ''; 
+            window.showToast('Odesláno Vlastníkovi!');
+            window.triggerUpdate(); // Okamžitá reakce UI
+
+            if(window.db) {
+                try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'verifications', reqId), newReq); } catch(e) {}
+            }
+        };
+
+        window.renderDevRequests = () => {
+            const container = document.getElementById('dev-requests-container');
+            const reqs = window.DB.verifs || [];
+            if (reqs.length === 0) { container.innerHTML = `<div class="text-[#71767b] text-sm p-4 bg-[#16181c] rounded-2xl border border-[#2f3336] text-center font-medium">Čisto! Žádné nové žádosti.</div>`; return; }
+            container.innerHTML = reqs.map(r => `
+                <div class="bg-[#16181c] border border-[#2f3336] rounded-2xl p-5 shadow-lg">
+                    <div class="flex gap-3 mb-3"><img src="${r.avatar}" class="w-10 h-10 rounded-full border border-[#2f3336]"><div class="font-bold text-white">${r.fullname}<div class="text-xs text-[#71767b] font-normal">@${r.handle}</div></div></div>
+                    <p class="text-sm text-[#e7e9ea] bg-black p-3 rounded-xl border border-[#2f3336] mb-4">${r.reason}</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="window.resolveVerification('${r.id}', '${r.handle}', 'gold')" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg text-xs font-bold transition cursor-pointer">Zlatý</button>
+                        <button onclick="window.resolveVerification('${r.id}', '${r.handle}', 'blue')" class="px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-xs font-bold transition cursor-pointer">Modrý</button>
+                        <button onclick="window.resolveVerification('${r.id}', null, 'reject')" class="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-bold ml-auto transition cursor-pointer">Zamítnout</button>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        window.resolveVerification = async (reqId, handle, color) => {
+            window.DB.verifs = window.DB.verifs.filter(v => v.id !== reqId);
+            if(color !== 'reject') {
+                let b = window.getDict('badges'); b[handle] = color;
+                if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'badges'), b); } catch(e) {} }
+            }
+            window.triggerUpdate();
+            if(window.db) { try { await deleteDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'verifications', reqId)); } catch(e) {} }
+            window.showToast(color === 'reject' ? 'Zamítnuto' : 'Uděleno');
+        };
+
+        window.renderDevUsers = () => {
+            const container = document.getElementById('dev-all-users-container');
+            const users = window.DB.users || [], badges = window.getDict('badges'), bans = window.getDict('bans'), devs = window.getDict('devs');
+            container.innerHTML = users.map(u => {
+                const isBanned = bans[u.handle] && bans[u.handle] > Date.now();
+                const isDev = u.handle === 'Flex' || devs[u.handle];
+                return `
+                <div class="bg-[#16181c] border ${isBanned?'border-red-500':'border-[#2f3336]'} rounded-2xl p-4 sm:p-5 shadow-lg mb-3">
+                    <div class="flex items-center gap-3">
+                        <img src="${u.avatar}" class="w-12 h-12 rounded-full object-cover border border-[#2f3336]">
+                        <div class="min-w-0">
+                            <div class="font-bold text-white flex items-center truncate">${u.fullname} ${window.getBadgeIcon(badges[u.handle])}</div>
+                            <div class="text-xs text-[#71767b] truncate">@${u.handle} | ${u.email}</div>
+                            ${isDev?'<div class="text-[10px] uppercase text-amber-400 font-bold mt-1 bg-amber-500/10 inline-block px-2 py-0.5 rounded border border-amber-500/20"><i class="fa-solid fa-code"></i> Developer</div>':''}
+                            ${isBanned?'<div class="text-[10px] uppercase text-red-500 font-bold mt-1 bg-red-500/10 inline-block px-2 py-0.5 rounded border border-red-500/20"><i class="fa-solid fa-lock"></i> Zabanován</div>':''}
+                        </div>
+                    </div>
+                    ${(u.handle !== window.currentUser.handle && u.handle !== 'Flex') ? `
+                    <div class="mt-4 pt-4 border-t border-[#2f3336] space-y-3">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-xs text-[#71767b] font-bold w-full sm:w-auto">BAN:</span>
+                            <button onclick="window.setBan('${u.handle}', 1)" class="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold transition cursor-pointer">1m</button>
+                            <button onclick="window.setBan('${u.handle}', 5)" class="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold transition cursor-pointer">5m</button>
+                            <button onclick="window.setBan('${u.handle}', 60)" class="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold transition cursor-pointer">1h</button>
+                            <button onclick="window.setBan('${u.handle}', -1)" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-bold transition cursor-pointer">Perma</button>
+                            <button onclick="window.setBan('${u.handle}', 0)" class="px-3 py-1 bg-[#2f3336] hover:bg-[#3e4246] text-white rounded-lg text-xs font-bold sm:ml-auto transition cursor-pointer">Zrušit</button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-amber-400 font-bold w-12">DEV:</span>
+                            ${isDev ? `<button onclick="window.toggleDev('${u.handle}', false)" class="px-3 py-1 bg-[#2f3336] hover:bg-[#3e4246] text-white rounded-lg text-xs font-bold transition cursor-pointer">Odebrat práva</button>` : `<button onclick="window.toggleDev('${u.handle}', true)" class="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg text-xs font-bold transition cursor-pointer">Udělit práva</button>`}
+                        </div>
+                    </div>` : ''}
+                </div>`;
+            }).join('');
+        };
+
+        window.setBan = async (handle, mins) => {
+            let b = window.getDict('bans');
+            if (mins === 0) delete b[handle];
+            else b[handle] = mins === -1 ? Date.now() + 3153600000000 : Date.now() + (mins * 60000);
+            window.triggerUpdate();
+            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'bans'), b); } catch(e) {} }
+            window.showToast(mins === 0 ? 'BAN zrušen' : 'Zabanováno');
+        };
+
+        window.toggleDev = async (handle, grant) => {
+            let d = window.getDict('devs');
+            if(grant) d[handle] = true; else delete d[handle];
+            window.triggerUpdate();
+            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'devs'), d); } catch(e) {} }
+            window.showToast(grant ? 'Dev práva udělena' : 'Dev práva odebrána');
+        };
+
+        window.renderProfile = () => {
+            document.getElementById('profile-fullname').innerHTML = `${window.currentUser.fullname} ${window.getBadgeIcon(window.getDict('badges')[window.currentUser.handle])}`;
+            document.getElementById('profile-banner-avatar').src = window.currentUser.avatar;
+            document.getElementById('profile-bio').textContent = window.getDict('bios')[window.currentUser.handle] || 'Zatím bez biografie.';
+            const f = window.getDict('follows');
+            document.getElementById('profile-following-count').textContent = (f[window.currentUser.handle] || []).length;
+            let followers = 0; Object.values(f).forEach(arr => { if(arr.includes(window.currentUser.handle)) followers++; });
+            document.getElementById('profile-followers-count').textContent = followers;
+
+            if(window.checkIsOwner(window.currentUser)) {
+                const cols = { gold: 'Zlatý', blue: 'Modrý', purple: 'Fialový', green: 'Zelený', none: 'Skrýt' };
+                document.getElementById('badge-color-buttons').innerHTML = Object.keys(cols).map(c => 
+                    `<button type="button" onclick="window.setMyBadge('${c}')" class="px-4 py-2 border rounded-xl text-xs font-bold transition cursor-pointer ${c==='none'?'border-red-500/50 text-red-400 hover:bg-red-500/10':'border-[#2f3336] text-white hover:border-brand hover:bg-brand/10'}">${cols[c]}</button>`
+                ).join('');
+            }
+        };
+
+        window.setMyBadge = async (c) => { 
+            let b = window.getDict('badges'); 
+            if(c==='none') delete b[window.currentUser.handle]; else b[window.currentUser.handle] = c; 
+            window.triggerUpdate();
+            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'badges'), b); } catch(e) {} }
+            window.showToast('Odznak upraven'); 
+        };
+
+        window.openBioModal = () => {
+            document.getElementById('bio-input').value = window.getDict('bios')[window.currentUser.handle] || '';
+            document.getElementById('bio-modal').classList.remove('hidden');
+        };
+
+        window.saveBio = async () => {
+            let b = window.getDict('bios'); b[window.currentUser.handle] = document.getElementById('bio-input').value.trim(); 
+            document.getElementById('bio-modal').classList.add('hidden'); 
+            window.triggerUpdate();
+            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'bios'), b); } catch(e) {} }
+            window.showToast('Profil uložen');
+        };
+
+        window.switchTab = (tabName) => {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const tEl = document.getElementById(`tab-${tabName}`);
+            if(tEl) tEl.classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('text-brand', 'text-amber-400', 'text-white'));
+            const aBtn = document.querySelector(`[data-tab="${tabName}"]`);
+            if (aBtn) aBtn.classList.add('text-brand');
+            const titles = { home: 'Domů', messages: 'Zprávy', verify: 'Ověření', dev: 'Developer Hub', profile: 'Profil' };
+            document.getElementById('header-title').textContent = titles[tabName] || 'Flex';
+        };
+
+        window.setFeedFilter = (f) => {
+            window.activeFeedFilter = f;
+            document.getElementById('feed-filter-all').className = `flex-1 py-3.5 text-center border-b-4 ${f==='all'?'border-brand text-white':'border-transparent text-[#71767b] hover:bg-[#16181c]/50'} transition cursor-pointer`;
+            document.getElementById('feed-filter-following').className = `flex-1 py-3.5 text-center border-b-4 ${f==='following'?'border-brand text-white':'border-transparent text-[#71767b] hover:bg-[#16181c]/50'} transition cursor-pointer`;
+            window.renderPosts();
+        };
+
+        window.submitPost = async () => {
+            if (window.checkBanStatus(window.currentUser.handle)) return;
+            const t = document.getElementById('post-text').value.trim();
+            const i = document.getElementById('post-image').value.trim();
+            if (!t && !i) return;
+            
+            const newPost = { id: `p_${Date.now()}`, authorName: window.currentUser.fullname, authorHandle: window.currentUser.handle, authorAvatar: window.currentUser.avatar, text: t, imageUrl: i, time: Date.now(), likes: [] };
+            window.DB.posts.unshift(newPost);
+            
+            document.getElementById('post-text').value = ''; document.getElementById('post-image').value = '';
+            document.getElementById('post-image').classList.add('hidden');
+            window.showToast('Publikováno');
+            window.triggerUpdate(); // Okamžitá reakce UI
+
+            if(window.db) {
+                try { await setDoc(doc(collection(window.db, 'artifacts', appId, 'public', 'data', 'posts')), newPost); } catch(e) {}
+            }
+        };
+
+        // START
+        window.openAccountSwitcher();
+    </script>
+</body>
+</html>
