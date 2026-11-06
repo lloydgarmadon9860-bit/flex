@@ -925,7 +925,7 @@
                         const nb = Object.assign({}, b); if (mins === 0) delete nb[handle]; else nb[handle] = until;
                         await setDoc(ref, nb);
                     } else {
-                        await setDoc(ref, { [handle]: mins === 0 ? deleteField() : until, _by: window.currentUser.handle }, { merge: true });
+                        await setDoc(ref, { [handle]: mins === 0 ? deleteField() : until, _by: window.currentUser.handle, _t: handle }, { merge: true });
                     }
                 } catch(e) { console.warn(e); window.showToast('Ban se neuložil.', true); return; }
             }
