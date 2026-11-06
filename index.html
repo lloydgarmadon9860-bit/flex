@@ -300,7 +300,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, linkWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, collection, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const safeStorage = {
@@ -376,6 +376,38 @@
         };
 
 
+        // E-mail + heslo: 1) anonymní účet na tomto zařízení se propojí (zachová jméno),
+        // 2) jinak přihlášení, 3) jinak nový účet. Když je e-mail vypnutý ve Firebase, spadne zpět na anonymní.
+        window.emailAuth = async (email, pass) => {
+            const a = window.auth;
+            const msg = (e) => {
+                const c = (e && e.code) || '';
+                if (c === 'auth/invalid-email') return 'Neplatný e-mail.';
+                if (c === 'auth/weak-password') return 'Heslo musí mít aspoň 6 znaků.';
+                if (c === 'auth/too-many-requests') return 'Moc pokusů, zkus to za chvíli.';
+                if (c === 'auth/network-request-failed') return 'Chyba připojení, zkus to znovu.';
+                return 'Špatný e-mail nebo heslo.';
+            };
+            try {
+                const cur = a.currentUser;
+                if (cur && !cur.isAnonymous && cur.email && cur.email.toLowerCase() === email.toLowerCase()) return null;
+                if (cur && cur.isAnonymous) {
+                    try { await linkWithCredential(cur, EmailAuthProvider.credential(email, pass)); return null; }
+                    catch (e) {
+                        if (e.code === 'auth/operation-not-allowed') return null;
+                        if (e.code !== 'auth/email-already-in-use' && e.code !== 'auth/credential-already-in-use' && e.code !== 'auth/provider-already-linked') return msg(e);
+                    }
+                }
+                try { await signInWithEmailAndPassword(a, email, pass); return null; }
+                catch (e) {
+                    if (e.code === 'auth/operation-not-allowed') { if (!a.currentUser) { try { await signInAnonymously(a); } catch(_){} } return null; }
+                    if (e.code !== 'auth/invalid-credential' && e.code !== 'auth/user-not-found' && e.code !== 'auth/invalid-login-credentials') return msg(e);
+                }
+                try { await createUserWithEmailAndPassword(a, email, pass); return null; }
+                catch (e) { return msg(e); }
+            } catch (e) { console.warn('emailAuth', e); return msg(e); }
+        };
+
         // ZÁMEK JMÉNA: každé @jméno patří jen jednomu účtu (zařízení)
         window.claimHandle = async (handle) => {
             try {
@@ -440,9 +472,11 @@
                 if (btnText) btnText.innerText = "Načítám...";
                 if (btnIcon) btnIcon.className = "fa-solid fa-spinner fa-spin text-xs";
 
-                // Tichý pokus o anonymní auth (pokud selže, nevadí - pokračujeme!)
+                // PŘIHLÁŠENÍ E-MAILEM A HESLEM (účet funguje na každém zařízení)
                 if (window.auth) {
-                    try { await signInAnonymously(window.auth); } catch(e) {}
+                    const resetBtn = () => { if (btnText) btnText.innerText = "Přihlásit se / Vytvořit"; if (btnIcon) btnIcon.className = "fa-solid fa-arrow-right text-xs"; };
+                    const authErr = await window.emailAuth(email, pass);
+                    if (authErr) { window.showToast(authErr, true); resetBtn(); return; }
                 }
 
                 const isMain = false;
@@ -455,7 +489,7 @@
                 window.isOwnerSession = false;
 
                 if (!(await window.claimHandle(handle))) {
-                    window.showToast('Jméno @' + handle + ' už patří jinému účtu.', true);
+                    window.showToast('Jméno @' + handle + ' už patří jinému účtu (jiný e-mail).', true);
                     if (btnText) btnText.innerText = "Přihlásit se / Vytvořit";
                     if (btnIcon) btnIcon.className = "fa-solid fa-arrow-right text-xs";
                     return;
@@ -582,8 +616,8 @@
                     window.isOwnerSession = false;
                     window.currentUser = acc;
                     (async () => {
-                        if (window.auth) { try { await signInAnonymously(window.auth); } catch(e) {} }
-                        if (!(await window.claimHandle(acc.handle))) { window.showToast('Jméno @' + acc.handle + ' už patří jinému účtu.', true); return; }
+                        if (window.auth && !window.auth.currentUser) { try { await signInAnonymously(window.auth); } catch(e) {} }
+                        if (!(await window.claimHandle(acc.handle))) { window.showToast('Přihlas se k @' + acc.handle + ' e-mailem a heslem.', true); return; }
                         window.initCloudSync();
                         window.finishLogin();
                     })();
