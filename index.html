@@ -247,7 +247,7 @@
             </section>
         </main>
 
-        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v1.2</div>
+        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v1.2.1</div>
         <!-- Bottom Nav -->
         <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-8 py-3 flex justify-between items-center z-40 pb-safe">
             <button onclick="window.switchTab('home')" class="nav-btn text-brand hover:text-white p-2 text-2xl transition cursor-pointer" data-tab="home"><i class="fa-solid fa-house"></i></button>
@@ -707,7 +707,7 @@
 
             try {
                 onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'posts'), (s) => {
-                    window.DB.posts = s.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => b.time - a.time);
+                    window.DB.posts = s.docs.map(d => { const x = d.data() || {}; return { ...x, id: x.id || d.id, _doc: d.id }; }).sort((a,b) => b.time - a.time);
                     window.triggerUpdate();
                 }, (e)=>{});
                 
@@ -791,7 +791,7 @@
                                 ${(p.authorHandle === window.currentUser.handle || window.checkIsOwner(window.currentUser)) ? `<button onclick="window.deletePost('${p.id}')" class="text-[#71767b] hover:text-red-500 transition text-sm px-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>` : ''}
                             </div>
                         </div>
-                        <p class="text-[15px] text-[#e7e9ea] mt-1.5 whitespace-pre-wrap leading-relaxed">${p.text}</p>
+                        <p class="text-[15px] text-[#e7e9ea] mt-1.5 whitespace-pre-wrap leading-relaxed">${window.renderPostText(p)}</p>
                         ${p.imageUrl ? `<img src="${p.imageUrl}" class="mt-3 rounded-2xl w-full object-cover max-h-96 border border-[#2f3336]" onerror="this.style.display='none'">` : ''}
                         <div class="flex gap-8 mt-3.5 text-[#71767b] text-[13px] items-center font-semibold">
                             <button onclick="window.openComments('${p.id}')" class="flex items-center gap-2 hover:text-brand transition group cursor-pointer">
@@ -821,13 +821,71 @@
             let l = p.likes || [];
             p.likes = l.includes(window.currentUser.handle) ? l.filter(h => h !== window.currentUser.handle) : [...l, window.currentUser.handle];
             window.triggerUpdate(); // Okamžitá reakce UI
-            if(window.db) { try { await updateDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'posts', p.id), { likes: p.likes }); } catch(e) {} }
+            if(window.db) { try { await updateDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'posts', p._doc || p.id), { likes: p.likes }); } catch(e) {} }
         };
 
         window.deletePost = async (postId) => {
+            const p = (window.DB.posts || []).find(x => x.id === postId);
+            if (!p) return;
+            if (!(p.authorHandle === window.currentUser.handle || window.checkIsOwner(window.currentUser))) return;
+            if (!confirm('Smazat tenhle post pro všechny?')) return;
             window.DB.posts = window.DB.posts.filter(x => x.id !== postId);
             window.triggerUpdate();
-            if(window.db) { try { await deleteDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'posts', postId)); window.showToast('Smazáno'); } catch(e) {} }
+            if (!window.db || !p._doc) { window.showToast('Smazáno'); return; }
+            try {
+                if (window.auth && !window.auth.currentUser) { try { await signInAnonymously(window.auth); } catch(e) {} }
+                await deleteDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'posts', p._doc));
+                window.showToast('Smazáno pro všechny');
+                for (const c of (window.DB.comments || []).filter(c => c.postId === postId)) {
+                    try { await deleteDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'comments', c.id)); } catch(e) {}
+                }
+            } catch(e) {
+                console.warn('delete', e);
+                window.DB.posts.push(p); window.DB.posts.sort((a,b) => b.time - a.time); window.triggerUpdate();
+                window.showToast('Smazání se nepovedlo: ' + (e.code || e.message), true);
+            }
+        };
+
+        // ZAČERNĚNÍ SLOV: dev klikne na slovo -> začerní se pro všechny; odkrýt může jen vlastník (@Flex přes Google)
+        window.escHtml = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        window.isRealOwner = () => window.isOwnerSession === true && !!window.currentUser && window.currentUser.handle === 'Flex';
+        window.renderPostText = (p) => {
+            const cens = new Set(p.censored || []);
+            const canDev = window.checkIsOwner(window.currentUser);
+            const own = window.isRealOwner();
+            let wi = 0;
+            return String(p.text || '').split(/(\s+)/).map(part => {
+                if (part === '' || /^\s+$/.test(part)) return window.escHtml(part);
+                const i = wi++;
+                if (cens.has(i)) return `<span ${own ? `onclick="window.toggleCensor('${p.id}',${i})" title="Odkrýt"` : ''} style="background:#000;color:#000;border-radius:3px;padding:0 2px;${own ? 'cursor:pointer;outline:1px dashed #555;' : ''}" class="select-none">${'█'.repeat(Math.max(2, Math.min(part.length, 12)))}</span>`;
+                if (canDev) return `<span onclick="window.toggleCensor('${p.id}',${i})" class="cursor-pointer hover:bg-red-500/20 rounded">${window.escHtml(part)}</span>`;
+                return window.escHtml(part);
+            }).join('');
+        };
+        window.toggleCensor = async (postId, i) => {
+            if (!window.checkIsOwner(window.currentUser)) return;
+            const p = (window.DB.posts || []).find(x => x.id === postId);
+            if (!p) return;
+            const own = window.isRealOwner();
+            const old = p.censored || [];
+            let c = [...old];
+            if (c.includes(i)) {
+                if (!own) { window.showToast('Odkrýt slovo může jen vlastník.', true); return; }
+                c = c.filter(x => x !== i);
+            } else {
+                const word = String(p.text || '').split(/\s+/).filter(Boolean)[i] || '';
+                if (!confirm('Začernit slovo „' + word + '“ pro všechny?')) return;
+                c.push(i);
+            }
+            p.censored = c; window.triggerUpdate();
+            if (!window.db || !p._doc) return;
+            try {
+                await updateDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'posts', p._doc), { censored: c });
+                window.showToast(c.length > old.length ? 'Slovo začerněno ⬛' : 'Slovo odkryto');
+            } catch(e) {
+                console.warn('censor', e); p.censored = old; window.triggerUpdate();
+                window.showToast('Nepovedlo se uložit: ' + (e.code || e.message), true);
+            }
         };
 
         window.openComments = (postId) => {
@@ -1170,7 +1228,7 @@
             window.triggerUpdate(); // Okamžitá reakce UI
 
             if(window.db) {
-                try { await setDoc(doc(collection(window.db, 'artifacts', appId, 'public', 'data', 'posts')), newPost); } catch(e) { console.error(e); window.showToast('Post se neuložil do cloudu.', true); }
+                try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'posts', newPost.id), newPost); } catch(e) { console.error(e); window.showToast('Post se neuložil do cloudu.', true); }
             }
         };
 
