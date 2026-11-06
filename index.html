@@ -263,7 +263,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const safeStorage = {
             get: (k) => { try { return localStorage.getItem(k); } catch(e) { return null; } },
@@ -575,11 +575,13 @@
                 try {
                     const bubbleRef = doc(window.db, 'artifacts', appId, 'public', 'data', 'users', 'bubble');
                     const snap = await getDoc(bubbleRef);
-                    if (!snap.exists()) {
-                        await setDoc(bubbleRef, bUser);
-                        let b = window.getDict('badges'); b['bubble'] = 'gold';
-                        await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'badges'), b);
-                        const postsCol = collection(window.db, 'artifacts', appId, 'public', 'data', 'posts');
+                    if (!snap.exists()) { try { await setDoc(bubbleRef, bUser); } catch(e){} }
+                    if (window.isOwnerSession === true) {
+                        try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'badges'), { bubble: 'gold' }, { merge: true }); } catch(e){}
+                    }
+                    const postsCol = collection(window.db, 'artifacts', appId, 'public', 'data', 'posts');
+                    const existing = await getDocs(postsCol);
+                    if (existing.empty) {
                         for (let i=0; i<msgs.length; i++) {
                             await setDoc(doc(postsCol), { authorName: 'Bubble Official', authorHandle: 'bubble', authorAvatar: bUser.avatar, text: msgs[i].t, imageUrl: msgs[i].img, time: Date.now() - (10-i)*1000, likes: [] });
                         }
@@ -699,7 +701,7 @@
             let f = window.getDict('follows'), myF = f[window.currentUser.handle] || [];
             f[window.currentUser.handle] = myF.includes(targetHandle) ? myF.filter(h => h !== targetHandle) : [...myF, targetHandle];
             window.triggerUpdate(); // Okamžitá reakce UI
-            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'follows'), f); } catch(e) {} }
+            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'follows'), { [window.currentUser.handle]: f[window.currentUser.handle] }, { merge: true }); } catch(e) { console.warn(e); } }
         };
 
         window.toggleLike = async (postId) => {
@@ -933,7 +935,7 @@
             let b = window.getDict('bios'); b[window.currentUser.handle] = document.getElementById('bio-input').value.trim(); 
             document.getElementById('bio-modal').classList.add('hidden'); 
             window.triggerUpdate();
-            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'bios'), b); } catch(e) {} }
+            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'bios'), { [window.currentUser.handle]: b[window.currentUser.handle] }, { merge: true }); } catch(e) { console.warn(e); } }
             window.showToast('Profil uložen');
         };
 
@@ -970,7 +972,7 @@
             window.triggerUpdate(); // Okamžitá reakce UI
 
             if(window.db) {
-                try { await setDoc(doc(collection(window.db, 'artifacts', appId, 'public', 'data', 'posts')), newPost); } catch(e) {}
+                try { await setDoc(doc(collection(window.db, 'artifacts', appId, 'public', 'data', 'posts')), newPost); } catch(e) { console.error(e); window.showToast('Post se neuložil do cloudu.', true); }
             }
         };
 
