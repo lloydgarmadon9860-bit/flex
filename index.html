@@ -147,13 +147,14 @@
                     <div class="flex gap-3">
                         <img id="compose-avatar" src="" class="w-11 h-11 rounded-full object-cover flex-shrink-0">
                         <div class="flex-1">
-                            <textarea id="post-text" rows="2" placeholder="Co se právě děje?" class="w-full bg-transparent text-white placeholder-[#71767b] focus:outline-none resize-none text-lg"></textarea>
+                            <textarea id="post-text" rows="2" oninput="window.updateCharCount()" placeholder="Co se právě děje?" class="w-full bg-transparent text-white placeholder-[#71767b] focus:outline-none resize-none text-lg"></textarea>
                             <input type="text" id="post-image" placeholder="Odkaz na obrázek (nepovinné URL)..." class="w-full bg-[#16181c] border border-[#2f3336] rounded-xl px-3 py-2.5 text-sm text-white placeholder-[#71767b] focus:outline-none focus:border-brand mb-3 hidden">
                             <div class="flex items-center justify-between pt-3 border-t border-[#2f3336]/60">
                                 <button type="button" onclick="document.getElementById('post-image').classList.toggle('hidden')" class="text-brand hover:bg-brand/10 p-2.5 rounded-full transition text-base cursor-pointer">
                                     <i class="fa-solid fa-image"></i>
                                 </button>
-                                <button type="button" onclick="window.submitPost()" class="bg-brand hover:bg-brand-hover text-white font-bold px-6 py-2 rounded-full text-sm transition shadow-md cursor-pointer">Publikovat</button>
+                                <div class="flex items-center gap-3"><span id="post-char-count" class="text-sm text-[#71767b] tabular-nums">0/280</span>
+                                <button type="button" onclick="window.submitPost()" class="bg-brand hover:bg-brand-hover text-white font-bold px-6 py-2 rounded-full text-sm transition shadow-md cursor-pointer">Publikovat</button></div>
                             </div>
                         </div>
                     </div>
@@ -1090,16 +1091,27 @@
             window.renderPosts();
         };
 
+        // Počítadlo znaků u psaní postu (max 280)
+        window.updateCharCount = () => {
+            const el = document.getElementById('post-text'); const c = document.getElementById('post-char-count');
+            if (!el || !c) return;
+            const n = el.value.length;
+            c.textContent = `${n}/280`;
+            c.style.color = n > 280 ? '#f4212e' : (n > 260 ? '#ffd400' : '#71767b');
+            c.style.fontWeight = n > 280 ? '700' : '400';
+        };
+
         window.submitPost = async () => {
             if (window.checkBanStatus(window.currentUser.handle)) return;
             const t = document.getElementById('post-text').value.trim();
             const i = document.getElementById('post-image').value.trim();
             if (!t && !i) return;
+            if (t.length > 280) { window.showToast('Post je moc dlouhý (max 280 znaků).', true); return; }
             
             const newPost = { id: `p_${Date.now()}`, authorName: window.currentUser.fullname, authorHandle: window.currentUser.handle, authorAvatar: window.currentUser.avatar, text: t, imageUrl: i, time: Date.now(), likes: [] };
             window.DB.posts.unshift(newPost);
             
-            document.getElementById('post-text').value = ''; document.getElementById('post-image').value = '';
+            document.getElementById('post-text').value = ''; document.getElementById('post-image').value = ''; window.updateCharCount();
             document.getElementById('post-image').classList.add('hidden');
             window.showToast('Publikováno');
             window.triggerUpdate(); // Okamžitá reakce UI
