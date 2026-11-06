@@ -643,7 +643,12 @@
             window.renderPosts();
             window.renderMessages();
             window.renderVerificationUI();
-            if (window.checkIsOwner(window.currentUser)) { window.renderDevRequests(); window.renderDevUsers(); }
+            const _isDev = window.checkIsOwner(window.currentUser);
+            const _nav = document.getElementById('nav-dev-li'), _obm = document.getElementById('owner-badge-manager');
+            if (_nav) _nav.classList.toggle('hidden', !_isDev);
+            if (_obm) _obm.classList.toggle('hidden', !_isDev);
+            if (_isDev) { window.renderDevRequests(); window.renderDevUsers(); }
+            else { const _t = document.getElementById('tab-dev'); if (_t && !_t.classList.contains('hidden')) window.switchTab('home'); }
             window.renderProfile();
             if (window.activePostForComments) window.renderCommentsList();
         };
@@ -841,7 +846,7 @@
             window.DB.verifs = window.DB.verifs.filter(v => v.id !== reqId);
             if(color !== 'reject') {
                 let b = window.getDict('badges'); b[handle] = color;
-                if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'badges'), b); } catch(e) {} }
+                if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'badges'), b); } catch(e) { console.warn(e); window.showToast('Neuloženo: změny můžeš dělat jen jako vlastník (Google).', true); return; } }
             }
             window.triggerUpdate();
             if(window.db) { try { await deleteDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'verifications', reqId)); } catch(e) {} }
@@ -889,7 +894,7 @@
             if (mins === 0) delete b[handle];
             else b[handle] = mins === -1 ? Date.now() + 3153600000000 : Date.now() + (mins * 60000);
             window.triggerUpdate();
-            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'bans'), b); } catch(e) {} }
+            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'bans'), b); } catch(e) { console.warn(e); window.showToast('Neuloženo: změny můžeš dělat jen jako vlastník (Google).', true); return; } }
             window.showToast(mins === 0 ? 'BAN zrušen' : 'Zabanováno');
         };
 
@@ -897,7 +902,7 @@
             let d = window.getDict('devs');
             if(grant) d[handle] = true; else delete d[handle];
             window.triggerUpdate();
-            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'devs'), d); } catch(e) {} }
+            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'devs'), d); } catch(e) { console.warn(e); window.showToast('Neuloženo: změny můžeš dělat jen jako vlastník (Google).', true); return; } }
             window.showToast(grant ? 'Dev práva udělena' : 'Dev práva odebrána');
         };
 
@@ -922,7 +927,7 @@
             let b = window.getDict('badges'); 
             if(c==='none') delete b[window.currentUser.handle]; else b[window.currentUser.handle] = c; 
             window.triggerUpdate();
-            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'badges'), b); } catch(e) {} }
+            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'badges'), b); } catch(e) { console.warn(e); window.showToast('Neuloženo: změny můžeš dělat jen jako vlastník (Google).', true); return; } }
             window.showToast('Odznak upraven'); 
         };
 
