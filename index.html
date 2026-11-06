@@ -247,6 +247,7 @@
             </section>
         </main>
 
+        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v1.2</div>
         <!-- Bottom Nav -->
         <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-8 py-3 flex justify-between items-center z-40 pb-safe">
             <button onclick="window.switchTab('home')" class="nav-btn text-brand hover:text-white p-2 text-2xl transition cursor-pointer" data-tab="home"><i class="fa-solid fa-house"></i></button>
@@ -322,8 +323,13 @@
             gold: getOfficialBadgeSVG('text-amber-400'),
             blue: getOfficialBadgeSVG('text-[#1d9bf0]'),
             purple: getOfficialBadgeSVG('text-purple-500'),
-            green: getOfficialBadgeSVG('text-emerald-500')
+            green: getOfficialBadgeSVG('text-emerald-500'),
+            white: getOfficialBadgeSVG('text-white'),
+            red: getOfficialBadgeSVG('text-red-500'),
+            orange: getOfficialBadgeSVG('text-orange-500'),
+            pink: getOfficialBadgeSVG('text-pink-400')
         };
+        window.BADGE_NAMES = { gold: 'Zlatý', blue: 'Modrý', purple: 'Fialový', green: 'Zelený', white: 'Bílý 🤍 Kamarád', red: 'Červený', orange: 'Oranžový', pink: 'Růžový' };
         window.getBadgeIcon = (type) => BADGES_SVG[type] || '';
 
         window.showToast = (msg, isError = false) => {
@@ -982,6 +988,11 @@
                             <button onclick="window.setBan('${u.handle}', -1)" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-bold transition cursor-pointer">Perma</button>` : ''}
                             <button onclick="window.setBan('${u.handle}', 0)" class="px-3 py-1 bg-[#2f3336] hover:bg-[#3e4246] text-white rounded-lg text-xs font-bold sm:ml-auto transition cursor-pointer">Zrušit</button>
                         </div>
+                        ${iAmOwner ? `<div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-xs text-[#71767b] font-bold w-full sm:w-auto">ODZNAK:</span>
+                            ${Object.keys(window.BADGE_NAMES).map(c => `<button onclick="window.giveBadge('${u.handle}','${c}')" class="px-3 py-1 bg-[#2f3336] hover:bg-[#3e4246] text-white rounded-lg text-xs font-bold transition cursor-pointer">${window.BADGE_NAMES[c]}</button>`).join('')}
+                            <button onclick="window.giveBadge('${u.handle}','none')" class="px-3 py-1 bg-red-500/10 text-red-400 rounded-lg text-xs font-bold cursor-pointer">Odebrat</button>
+                        </div>` : ''}
                         ${iAmOwner ? `<div class="flex items-center gap-2">
                             <span class="text-xs text-amber-400 font-bold w-12">DEV:</span>
                             ${isDev ? `<button onclick="window.toggleDev('${u.handle}', false)" class="px-3 py-1 bg-[#2f3336] hover:bg-[#3e4246] text-white rounded-lg text-xs font-bold transition cursor-pointer">Odebrat práva</button>` : `<button onclick="window.toggleDev('${u.handle}', true)" class="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg text-xs font-bold transition cursor-pointer">Udělit práva</button>`}
@@ -1031,11 +1042,19 @@
             document.getElementById('profile-followers-count').textContent = followers;
 
             if(window.checkIsOwner(window.currentUser)) {
-                const cols = { gold: 'Zlatý', blue: 'Modrý', purple: 'Fialový', green: 'Zelený', none: 'Skrýt' };
+                const cols = { gold: 'Zlatý', blue: 'Modrý', purple: 'Fialový', green: 'Zelený', white: 'Bílý 🤍 Kamarád', red: 'Červený', orange: 'Oranžový', pink: 'Růžový', none: 'Skrýt' };
                 document.getElementById('badge-color-buttons').innerHTML = Object.keys(cols).map(c => 
                     `<button type="button" onclick="window.setMyBadge('${c}')" class="px-4 py-2 border rounded-xl text-xs font-bold transition cursor-pointer ${c==='none'?'border-red-500/50 text-red-400 hover:bg-red-500/10':'border-[#2f3336] text-white hover:border-brand hover:bg-brand/10'}">${cols[c]}</button>`
                 ).join('');
             }
+        };
+
+        window.giveBadge = async (handle, c) => {
+            let b = window.getDict('badges');
+            if(c==='none') delete b[handle]; else b[handle] = c;
+            window.triggerUpdate();
+            if(window.db) { try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'badges'), b); } catch(e) { console.warn(e); window.showToast('Neuloženo: změny můžeš dělat jen jako vlastník (Google).', true); return; } }
+            window.showToast('Odznak upraven');
         };
 
         window.setMyBadge = async (c) => { 
