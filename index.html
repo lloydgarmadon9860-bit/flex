@@ -662,7 +662,7 @@
                     }, (e) => {});
                 } catch(e){}
             };
-            listenGlobal('badges'); listenGlobal('bios'); listenGlobal('bans'); listenGlobal('devs'); listenGlobal('follows'); listenGlobal('themes');
+            listenGlobal('badges'); listenGlobal('bios'); listenGlobal('bans'); listenGlobal('devs'); listenGlobal('follows');
 
             try {
                 onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'posts'), (s) => {
@@ -685,6 +685,12 @@
                     window.triggerUpdate();
                 }, (e)=>{});
                 
+                onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'themes'), (s) => {
+                    const t = {}; s.docs.forEach(d => { t[d.id] = d.data(); });
+                    window.DB.themes = t;
+                    window.triggerUpdate();
+                }, (e)=>{});
+
                 onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'users'), (s) => {
                     window.DB.users = s.docs.map(d => ({id: d.id, ...d.data()}));
                     window.triggerUpdate();
@@ -1015,9 +1021,16 @@
             matrix:  { name: 'Matrix', sw: 'linear-gradient(135deg,#000,#00ff46)' }
         };
         window.hasGold = (h) => window.getDict('badges')[h] === 'gold';
+        window.myUid = () => (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid : 'local';
+        window.getMyTheme = (h) => {
+            const e = window.getDict('themes')[h];
+            if (!e) return 'default';
+            if (typeof e === 'string') return e;
+            return (e.uid === window.myUid() && window.THEMES[e.t]) ? e.t : 'default';
+        };
         window.applyTheme = () => {
             const u = window.currentUser;
-            let t = (u && window.hasGold(u.handle)) ? (window.getDict('themes')[u.handle] || 'default') : 'default';
+            let t = (u && window.hasGold(u.handle)) ? window.getMyTheme(u.handle) : 'default';
             if (!window.THEMES[t]) t = 'default';
             document.body.className = document.body.className.replace(/\btheme-\S+/g, '').trim();
             if (t !== 'default') document.body.classList.add('theme-' + t);
@@ -1026,7 +1039,7 @@
         };
         window.openThemeModal = () => {
             if (!window.hasGold(window.currentUser.handle)) return window.showToast('Styly jsou jen pro zlatý odznak.', true);
-            const cur = window.getDict('themes')[window.currentUser.handle] || 'default';
+            const cur = window.getMyTheme(window.currentUser.handle);
             document.getElementById('theme-options').innerHTML = Object.keys(window.THEMES).map(k =>
                 `<button type="button" onclick="window.setTheme('${k}')" class="rounded-2xl border ${k===cur?'border-amber-400 ring-2 ring-amber-400':'border-[#2f3336]'} p-2 text-left cursor-pointer"><div class="h-14 rounded-xl mb-2" style="background:${window.THEMES[k].sw}"></div><div class="text-sm font-bold text-white">${window.THEMES[k].name}${k===cur?' ✓':''}</div></button>`
             ).join('');
@@ -1036,12 +1049,12 @@
             const h = window.currentUser.handle;
             if (!window.hasGold(h) || !window.THEMES[k]) return;
             const old = window.getDict('themes')[h];
-            if ((old || 'default') === k) return;
-            window.DB.themes = { ...window.getDict('themes'), [h]: k };
+            if (window.getMyTheme(h) === k) return;
+            window.DB.themes = { ...window.getDict('themes'), [h]: { t: k, uid: window.myUid() } };
             window.applyTheme(); window.openThemeModal();
             if (window.db) {
-                try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'themes'), { [h]: k, _t: h }, { merge: true }); }
-                catch(e) { console.warn(e); window.DB.themes[h] = old; window.applyTheme(); window.openThemeModal(); window.showToast('Styl se neuložil.', true); return; }
+                try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'themes', h), { t: k, uid: window.myUid(), time: Date.now() }); }
+                catch(e) { console.warn(e); if (old) window.DB.themes[h] = old; else delete window.DB.themes[h]; window.applyTheme(); window.openThemeModal(); window.showToast('Styl se neuložil.', true); return; }
             }
             window.showToast('Styl nastaven: ' + window.THEMES[k].name);
         };
