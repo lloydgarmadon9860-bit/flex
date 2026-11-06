@@ -164,6 +164,19 @@
 
             <!-- TAB: MESSAGES -->
             <section id="tab-messages" class="tab-content animate-fade hidden">
+                <!-- v1.2.j: chat se renovuje (zámek do v2.0) -->
+                <div id="chat-closed" class="relative overflow-hidden min-h-[70vh] flex flex-col items-center justify-center text-center px-6 py-16">
+                    <div class="absolute left-[-10%] right-[-10%] top-10 h-10 rotate-[-6deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">🚧 FLEX CHAT SE RENOVUJE 🚧</span></div>
+                    <div class="absolute left-[-10%] right-[-10%] bottom-12 h-10 rotate-[5deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">🚧 ZAVŘENO DO ZÍTRA 10:00 🚧</span></div>
+                    <div class="relative z-10 bg-black/80 border border-[#facc15]/60 rounded-2xl p-6 max-w-sm">
+                        <div class="text-4xl mb-2">🚧</div>
+                        <h2 class="text-xl font-black text-white">Flex chat se renovuje</h2>
+                        <p class="text-[#e7e9ea] mt-2 text-sm">Zítra v 10:00 se znovu otevře pro veřejnost. Omlouváme se! 🙏</p>
+                        <p class="text-[#71767b] mt-4 text-xs uppercase tracking-widest font-bold">Otevíráme za</p>
+                        <div id="chat-countdown" class="text-3xl font-black text-[#facc15] mt-1 tabular-nums">--:--:--</div>
+                    </div>
+                </div>
+                <div id="chat-old" class="hidden">
                 <div class="p-4 border-b border-[#2f3336] bg-[#16181c]/80 sticky top-[65px] z-30 glass-header">
                     <div class="flex items-center bg-black border border-[#2f3336] rounded-xl px-4 py-2.5 focus-within:border-brand transition">
                         <i class="fa-solid fa-magnifying-glass text-[#71767b] mr-2"></i>
@@ -178,6 +191,7 @@
                             <i class="fa-solid fa-paper-plane"></i>
                         </button>
                     </div>
+                </div>
                 </div>
             </section>
 
@@ -247,7 +261,7 @@
             </section>
         </main>
 
-        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v1.2.1</div>
+        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v1.2.j</div>
         <!-- Bottom Nav -->
         <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-8 py-3 flex justify-between items-center z-40 pb-safe">
             <button onclick="window.switchTab('home')" class="nav-btn text-brand hover:text-white p-2 text-2xl transition cursor-pointer" data-tab="home"><i class="fa-solid fa-house"></i></button>
@@ -934,6 +948,17 @@
             }
         };
 
+        // v1.2.j odpočet do znovuotevření chatu (sobota 2026-11-07 10:00 Praha)
+        window.CHAT_OPEN_AT = Date.parse('2026-11-07T09:00:00Z');
+        window.tickChatCountdown = () => {
+            const el = document.getElementById('chat-countdown'); if (!el) return;
+            let ms = window.CHAT_OPEN_AT - Date.now();
+            if (ms <= 0) { el.textContent = 'Už brzy! 🚀'; return; }
+            const h = Math.floor(ms / 3600000), m = Math.floor(ms % 3600000 / 60000), sec = Math.floor(ms % 60000 / 1000);
+            el.textContent = `${h}h ${String(m).padStart(2,'0')}m ${String(sec).padStart(2,'0')}s`;
+        };
+        setInterval(window.tickChatCountdown, 1000); window.tickChatCountdown();
+
         window.renderMessages = () => {
             const container = document.getElementById('messages-container'), r = document.getElementById('dm-recipient').value.trim().replace('@', '');
             if (!r) { container.innerHTML = `<div class="text-center text-[#71767b] py-10 text-sm font-medium">Zadejte komu chcete napsat.</div>`; return; }
@@ -948,7 +973,7 @@
             }).join('');
         };
 
-        window.submitMessage = async () => {
+        window.submitMessage = async () => { if (Date.now() < window.CHAT_OPEN_AT) { window.showToast("Chat se renovuje, otevře se zítra v 10:00 🚧", true); return; }
             if (window.checkBanStatus(window.currentUser.handle)) return;
             const t = document.getElementById('dm-input').value.trim(), r = document.getElementById('dm-recipient').value.trim().replace('@', '');
             if (!t || !r) return;
