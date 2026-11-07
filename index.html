@@ -184,6 +184,20 @@
 <body class="min-h-screen flex flex-col items-center justify-start select-none bg-black">
 
     
+    
+    <!-- v2.2.1: výpadek (časový + z dev menu) -->
+    <div id="app-closed" class="fixed inset-0 z-[200] bg-black hidden flex-col items-center justify-center text-center px-6 overflow-hidden">
+        <div class="absolute left-[-10%] right-[-10%] top-16 h-10 rotate-[-6deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">⚠️ SERVERY JSOU DOLE ⚠️</span></div>
+        <div class="absolute left-[-10%] right-[-10%] bottom-16 h-10 rotate-[5deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">⚠️ ERROR 503 ⚠️</span></div>
+        <div class="relative z-10 bg-black/80 border border-[#facc15]/60 rounded-2xl p-6 max-w-sm">
+            <div class="text-5xl mb-2">🔌</div>
+            <h2 class="text-2xl font-black text-white">Promiň, ale servery Bubble Flexu jsou dole</h2>
+            <p class="text-[#e7e9ea] mt-2 text-sm">Pracujeme na tom. Zkus to prosím za chvíli a obnov stránku. 🙏</p>
+            <p class="text-[#71767b] mt-4 text-xs uppercase tracking-widest font-bold">Zkus to znovu za</p>
+            <div id="app-closed-cd" class="text-4xl font-black text-[#facc15] mt-1 tabular-nums">--:--</div>
+            <button id="app-closed-owner" type="button" onclick="window.appClosedBypass=true;window.tickAppClosed()" class="hidden mt-5 px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer">Vstoupit (jen vlastník)</button>
+        </div>
+    </div>
     <div id="toast-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none w-11/12 max-w-sm"></div>
 
     <!-- LOGIN / ACCOUNT SWITCHER OVERLAY -->
@@ -468,7 +482,7 @@
         </main>
 
         <aside id="v22-right" class="v22-right"></aside>
-        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.2</div>
+        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.2.1</div>
         <button id="to-top-btn" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-brand text-white font-bold px-4 py-2 rounded-full shadow-xl text-sm cursor-pointer">⬆️ Nahoru</button>
         <!-- Bottom Nav -->
         <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-3 py-3 flex justify-between items-center z-40 pb-safe">
@@ -948,7 +962,7 @@
                     }, (e) => {});
                 } catch(e){}
             };
-            listenGlobal('badges'); listenGlobal('bios'); listenGlobal('bans'); listenGlobal('devs'); listenGlobal('follows');
+            listenGlobal('badges'); listenGlobal('bios'); listenGlobal('bans'); listenGlobal('devs'); listenGlobal('follows'); listenGlobal('outage');
 
             try {
                 onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'posts'), (s) => {
@@ -1365,9 +1379,33 @@
                 tc.innerHTML =
                     tool('fa-rotate', 'Obnovit panel', 'Znovu vykreslí všechna data v dev menu.', b("window.triggerUpdate();window.showToast('Panel obnoven 🔄')", 'Obnovit')) +
                     tool('fa-palette', 'Můj odznak', 'Nastavení vlastního odznaku najdeš v profilu.', b("window.switchTab('profile');setTimeout(()=>document.getElementById('owner-badge-manager')?.scrollIntoView({behavior:'smooth'}),150)", 'Otevřít')) +
+                    (window.isRealOwner() ? tool('fa-plug-circle-xmark', 'Výpadek pro všechny', 'Všem ukáže „servery jsou dole“ na 5 minut. Ty můžeš vstoupit.', b("window.devOutage(5)", '⚠️ 5 min') + b("window.devOutage(0)", 'Ukončit')) : '') +
                     tool('fa-clipboard', 'Kopírovat přehled', 'Zkopíruje počty uživatelů, postů a banů.', b("window.devCopySummary()", 'Kopírovat')) +
                     `<div class="text-xs text-[#71767b] p-3 bg-black/40 border border-[#2f3336] rounded-2xl"><b class="text-amber-400">Tvoje práva:</b> ${iAmOwner ? 'vlastník – bany 1m/5m/1h/Perma, odznaky, dev práva' + (window.isRealOwner() ? ', coiny' : '') : 'developer – bany max 5 minut, ne na devy ani vlastníka'}.</div>`;
             }
+        };
+
+        // v2.2.1: výpadek – pevné okno + výpadek pro všechny z dev menu (globals/outage)
+        window.tickAppClosed = () => {
+            const el = document.getElementById('app-closed'); if (!el) return;
+            const now = Date.now();
+            const W = [[new Date('2026-11-07T19:15:00+01:00').getTime(), new Date('2026-11-07T19:25:00+01:00').getTime()]];
+            const o = (window.DB && window.DB.outage) || {};
+            if (typeof o.until === 'number' && o.until > now) W.push([typeof o.from === 'number' ? o.from : 0, o.until]);
+            const cur = W.find(w => now >= w[0] && now < w[1]);
+            const owner = !!(window.isRealOwner && window.isRealOwner());
+            const on = !!cur && !(owner && window.appClosedBypass);
+            el.classList.toggle('hidden', !on); el.classList.toggle('flex', on);
+            const ob = document.getElementById('app-closed-owner'); if (ob) ob.classList.toggle('hidden', !owner);
+            if (on) { const t = Math.max(0, Math.floor((cur[1] - now)/1000)); document.getElementById('app-closed-cd').textContent = String(Math.floor(t/60)).padStart(2,'0') + ':' + String(t%60).padStart(2,'0'); }
+        };
+        setInterval(window.tickAppClosed, 1000); setTimeout(window.tickAppClosed, 200);
+        window.devOutage = async (mins) => {
+            if (!(window.isRealOwner && window.isRealOwner())) { window.showToast('Výpadek může spustit jen vlastník.', true); return; }
+            const data = mins > 0 ? { from: Date.now(), until: Date.now() + mins * 60000 } : { from: 0, until: 0 };
+            try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'outage'), data); window.DB.outage = data; window.appClosedBypass = true; window.tickAppClosed();
+                window.showToast(mins > 0 ? 'Výpadek spuštěn pro všechny na ' + mins + ' min ⚠️' : 'Výpadek ukončen ✅'); }
+            catch(e) { console.warn(e); window.showToast('Nepovedlo se: musíš být přihlášený jako vlastník (Google).', true); }
         };
         window.devManageUser = (h) => { window.devTab = 'users'; window.devFilter = 'all'; const i = document.getElementById('dev-user-search'); if (i) i.value = h; window.renderDevUsers(); window.scrollTo(0, 0); };
         window.devCopySummary = async () => {
