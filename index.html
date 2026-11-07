@@ -105,25 +105,85 @@
         body.theme-sunset { --t-bg: linear-gradient(180deg, #2b1055 0%, #7a1f5c 45%, #d6336c 75%, #ff8a3d 100%); --t-card: rgba(40,12,52,.78); --t-header: rgba(36,10,60,.88); --t-border: #ffb34766; --t-text: #fff3e6; --t-muted: #e7b4c6; --t-accent: #ffb347; --t-input: rgba(30,8,44,.82); --t-btntext: #3a1200; --t-font: 'Trebuchet MS', 'Inter', sans-serif; }
         body.theme-sunset .bg-\[\#16181c\], body.theme-sunset .rounded-2xl.border { box-shadow: 0 6px 20px rgba(255,120,60,.15); }
         body.theme-sunset h1, body.theme-sunset h2 { text-shadow: 0 0 12px #ff8a3d88; }
+        /* ===== v2.2: RENOVACE – nový vzhled ve stylu X ===== */
+        :root { --v22-r: 16px; --v22-ease: cubic-bezier(.2,.8,.2,1); }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif; letter-spacing: -0.005em; }
+        #app-container { box-shadow: none; }
+        .glass-header { background: rgba(0,0,0,.72); backdrop-filter: saturate(180%) blur(16px); -webkit-backdrop-filter: saturate(180%) blur(16px); }
+        header.glass-header { min-height: 56px; padding-top: .5rem !important; padding-bottom: .5rem !important; }
+        #header-title { font-size: 1.15rem; font-weight: 800; }
+        #feed-filter-all, #feed-filter-following { font-size: 15px; position: relative; border-bottom-width: 0 !important; transition: background-color .2s var(--v22-ease), color .2s; }
+        #feed-filter-all:hover, #feed-filter-following:hover { background: rgba(231,233,234,.06); }
+        #feed-filter-all.border-brand::after, #feed-filter-following.border-brand::after { content: ''; position: absolute; left: 50%; bottom: 0; width: 56px; height: 4px; border-radius: 9999px; background: #1d9bf0; transform: translateX(-50%); animation: v22grow .25s var(--v22-ease); }
+        body[class*="theme-"] #feed-filter-all.border-brand::after, body[class*="theme-"] #feed-filter-following.border-brand::after { background: var(--t-accent); }
+        @keyframes v22grow { from { width: 0; } to { width: 56px; } }
+        #post-text { font-size: 20px; line-height: 1.35; min-height: 52px; }
+        #posts-feed > div { transition: background-color .18s var(--v22-ease); animation: v22in .3s var(--v22-ease) both; }
+        #posts-feed > div:hover { background: rgba(255,255,255,.03); }
+        @keyframes v22in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        #posts-feed img.rounded-2xl, #posts-feed .rounded-2xl { border-radius: var(--v22-r); }
+        .rounded-xl { border-radius: 12px; }
+        .rounded-2xl { border-radius: var(--v22-r); }
+        .rounded-3xl { border-radius: 22px; }
+        button { -webkit-tap-highlight-color: transparent; }
+        button:hover { transform: none; }
+        button:active { transform: scale(.96); }
+        input, textarea, select { transition: border-color .2s, box-shadow .2s; }
+        input:focus, textarea:focus { box-shadow: 0 0 0 2px rgba(29,155,240,.25); }
+        #post-text:focus { box-shadow: none; }
+        #gen-modal > div, #theme-modal > div, #bio-modal > div, #comment-modal > div { border-radius: 20px; animation: v22pop .22s var(--v22-ease); }
+        #gen-modal, #theme-modal, #bio-modal, #comment-modal { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+        @keyframes v22pop { from { opacity: 0; transform: scale(.96) translateY(8px); } to { opacity: 1; transform: none; } }
+        .tab-content { animation: v22in .25s var(--v22-ease); }
+        /* spodní lišta jako v X */
+        nav.glass-header { padding-top: .35rem !important; padding-bottom: calc(.35rem + env(safe-area-inset-bottom, 0px)) !important; justify-content: space-around !important; }
+        .nav-btn { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; font-size: 1.3rem !important; transition: background-color .2s, color .2s; }
+        .nav-btn.hidden { display: none !important; }
+        .nav-btn:hover { background: rgba(231,233,234,.08); }
+        .nav-btn.text-brand { color: #e7e9ea !important; }
+        .nav-btn.text-brand i { transform: scale(1.08); }
+        body[class*="theme-"] .nav-btn.text-brand { color: var(--t-accent) !important; }
+        /* tlačítko Publikovat a výběr času */
+        .v22-sched { max-width: 96px; }
+        .v22-sched option { background: #16181c; color: #e7e9ea; }
+        .v22-tag { display: inline-flex; align-items: center; gap: .25rem; font-size: 11px; font-weight: 800; padding: .1rem .5rem; border-radius: 9999px; background: rgba(29,155,240,.12); color: #1d9bf0; border: 1px solid rgba(29,155,240,.35); white-space: nowrap; }
+        .v22-prem { display: inline-flex; align-items: center; font-size: 10px; font-weight: 800; padding: 0 .4rem; line-height: 1.15rem; border-radius: 9999px; background: linear-gradient(90deg,#f59e0b,#ec4899,#8b5cf6); color: #fff; white-space: nowrap; margin-left: .2rem; flex-shrink: 0; }
+        .v22-prem-chip { color: #f5b3ff; }
+        .v22-ad { padding: 1rem 1.25rem; border-bottom: 1px solid #2f3336; position: relative; }
+        .v22-ad-card { border: 1px solid #2f3336; border-radius: var(--v22-r); padding: .9rem 1rem; background: linear-gradient(135deg, rgba(29,155,240,.08), rgba(139,92,246,.08)); }
+        body[class*="theme-"] .v22-ad, body[class*="theme-"] .v22-ad-card { border-color: var(--t-border); }
+        .v22-ad-x { position: absolute; top: .6rem; right: .8rem; width: 28px; height: 28px; border-radius: 9999px; color: #71767b; cursor: pointer; }
+        .v22-ad-x:hover { background: rgba(231,233,234,.08); color: #e7e9ea; }
+        .v22-gift { position: fixed; inset: 0; z-index: 120; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+        .v22-gift > div { max-width: 380px; width: 100%; background: #16181c; border: 1px solid #2f3336; border-radius: 24px; padding: 1.75rem 1.5rem; text-align: center; animation: v22pop .3s var(--v22-ease); position: relative; overflow: hidden; }
+        .v22-gift > div::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: linear-gradient(90deg,#f59e0b,#ec4899,#8b5cf6,#1d9bf0); }
+        .v22-right { display: none; }
+        .v22-box { background: #16181c; border: 1px solid #2f3336; border-radius: var(--v22-r); padding: 1rem; margin-bottom: 1rem; }
+        body[class*="theme-"] .v22-box { background: var(--t-card); border-color: var(--t-border); color: var(--t-text); }
+        /* počítač: levé menu + pravý panel jako v X */
+        @media (min-width: 1100px) {
+            nav.glass-header { top: 0; bottom: 0 !important; left: calc(50% - 336px - 240px) !important; right: auto !important; width: 230px; max-width: none !important; margin: 0 !important; flex-direction: column; justify-content: flex-start !important; align-items: stretch !important; gap: .25rem; border-top: 0 !important; background: transparent !important; backdrop-filter: none; padding: 1rem .5rem !important; }
+            nav.glass-header::before { content: 'Flex'; font-weight: 900; font-size: 1.6rem; color: #e7e9ea; padding: .25rem 1rem 1rem; }
+            body[class*="theme-"] nav.glass-header::before { color: var(--t-text); }
+            .nav-btn { width: auto; justify-content: flex-start; gap: 1rem; padding: .75rem 1rem !important; font-size: 1.35rem !important; }
+            .nav-btn::after { content: attr(title); font-size: 1.15rem; font-weight: 600; }
+            .nav-btn.text-brand::after { font-weight: 800; }
+            .v22-right { display: block; position: fixed; top: 0; bottom: 0; left: calc(50% + 336px + 24px); width: 320px; overflow-y: auto; padding: 1rem 0; z-index: 30; }
+            #app-container { padding-bottom: 2rem; }
+        }
+        /* ===== v2.2: 2 nové styly appky ===== */
+        body.theme-graphite { --t-bg: radial-gradient(ellipse at 50% -20%, #3a3f47 0%, transparent 60%), repeating-linear-gradient(135deg, rgba(255,255,255,.015) 0 2px, transparent 2px 6px), #15171a; --t-card: rgba(34,37,42,.88); --t-header: rgba(21,23,26,.88); --t-border: #4a5059; --t-text: #eef1f4; --t-muted: #9aa3ad; --t-accent: #c9d1d9; --t-input: rgba(14,15,17,.85); --t-btntext: #15171a; --t-font: 'Inter', sans-serif; }
+        body.theme-graphite .bg-\[\#16181c\], body.theme-graphite .rounded-2xl.border { box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 6px 16px rgba(0,0,0,.35); }
+        body.theme-sakura { --t-bg: radial-gradient(circle at 15% 10%, #ffd6e6 0%, transparent 40%), radial-gradient(circle at 85% 30%, #ffe9f1 0%, transparent 45%), linear-gradient(180deg, #fff5f8 0%, #fde7ef 100%); --t-card: rgba(255,255,255,.86); --t-header: rgba(255,240,246,.9); --t-border: #f4b6cc; --t-text: #4b1f33; --t-muted: #a26d84; --t-accent: #e2557f; --t-input: #fffafc; --t-btntext: #ffffff; --t-font: 'Trebuchet MS', 'Inter', sans-serif; }
+        body.theme-sakura .bg-\[\#16181c\], body.theme-sakura .rounded-2xl.border { box-shadow: 0 4px 14px rgba(226,85,127,.14); }
+        body.theme-sakura h1, body.theme-sakura h2 { text-shadow: 0 1px 0 #fff; }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body class="min-h-screen flex flex-col items-center justify-start select-none bg-black">
 
     
-    <!-- v2.1: celá appka zavřená 2026-11-07 18:00–18:30 (renovace) -->
-    <div id="app-closed" class="fixed inset-0 z-[200] bg-black hidden flex-col items-center justify-center text-center px-6 overflow-hidden">
-        <div class="absolute left-[-10%] right-[-10%] top-16 h-10 rotate-[-6deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">⚠️ SERVERY JSOU DOLE ⚠️</span></div>
-        <div class="absolute left-[-10%] right-[-10%] bottom-16 h-10 rotate-[5deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">⚠️ ERROR 503 ⚠️</span></div>
-        <div class="relative z-10 bg-black/80 border border-[#facc15]/60 rounded-2xl p-6 max-w-sm">
-            <div class="text-5xl mb-2">🔌</div>
-            <h2 class="text-2xl font-black text-white">Promiň, ale servery Bubble Flexu jsou dole</h2>
-            <p class="text-[#e7e9ea] mt-2 text-sm">Pracujeme na tom. Zkus to prosím za chvíli a obnov stránku. 🙏</p>
-            <p class="text-[#71767b] mt-4 text-xs uppercase tracking-widest font-bold">Zkus to znovu za</p>
-            <div id="app-closed-cd" class="text-4xl font-black text-[#facc15] mt-1 tabular-nums">--:--</div>
-            <button id="app-closed-owner" type="button" onclick="window.appClosedBypass=true;window.tickAppClosed()" class="hidden mt-5 px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer">Vstoupit (jen vlastník)</button>
-        </div>
-    </div>
     <div id="toast-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none w-11/12 max-w-sm"></div>
 
     <!-- LOGIN / ACCOUNT SWITCHER OVERLAY -->
@@ -231,6 +291,7 @@
                                 </button>
                                 <button type="button" onclick="document.getElementById('poll-box').classList.toggle('hidden')" class="text-brand hover:bg-brand/10 p-2.5 rounded-full transition text-base cursor-pointer" title="Anketa">📊</button>
                                 <button type="button" onclick="window.toggleEmojiRow('emoji-row','post-text')" class="hover:bg-brand/10 p-2.5 rounded-full transition text-base cursor-pointer" title="Emoji">😀</button>
+                                <select id="post-schedule" title="Kdy post vyjde" class="v22-sched bg-transparent border border-[#2f3336] text-brand text-xs font-bold rounded-full px-2 py-1.5 cursor-pointer focus:outline-none"><option value="0">🕒 Hned</option><option value="1">za 1 h</option><option value="3">za 3 h</option><option value="6">za 6 h</option><option value="12">za 12 h</option><option value="14">za 14 h</option><option value="24">za 24 h</option><option value="48">za 48 h</option></select>
                                 <div class="flex items-center gap-2 ml-auto flex-shrink-0"><span id="post-char-count" class="text-xs sm:text-sm text-[#71767b] tabular-nums">0/280</span>
                                 <button type="button" onclick="window.submitPost()" class="bg-brand hover:bg-brand-hover text-white font-bold px-4 sm:px-6 py-2 rounded-full text-sm transition shadow-md cursor-pointer whitespace-nowrap flex-shrink-0">Publikovat</button></div>
                             </div>
@@ -384,6 +445,7 @@
                         <div>
                             <h2 id="profile-fullname" class="text-2xl font-extrabold text-white flex items-center gap-1.5"></h2>
                             <p id="profile-handle" class="text-sm text-[#71767b] handle-display mt-0.5"></p>
+                            <p id="v22-prem-left" class="hidden text-xs font-bold mt-1.5 v22-prem-chip"></p>
                         </div>
                         <div class="flex flex-col items-end gap-2"><button onclick="window.openBioModal()" class="bg-transparent hover:bg-[#16181c] border border-[#2f3336] text-white font-bold px-4 py-1.5 rounded-full text-sm transition cursor-pointer">Upravit profil</button><button id="theme-btn" onclick="window.openThemeModal()" class="hidden bg-amber-400/15 hover:bg-amber-400/25 border border-amber-400/60 text-amber-400 font-bold px-4 py-1.5 rounded-full text-sm transition cursor-pointer">🎨 Styl profilu</button></div>
                     </div>
@@ -405,7 +467,8 @@
             </section>
         </main>
 
-        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.1.2</div>
+        <aside id="v22-right" class="v22-right"></aside>
+        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.2</div>
         <button id="to-top-btn" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-brand text-white font-bold px-4 py-2 rounded-full shadow-xl text-sm cursor-pointer">⬆️ Nahoru</button>
         <!-- Bottom Nav -->
         <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-3 py-3 flex justify-between items-center z-40 pb-safe">
@@ -1104,17 +1167,7 @@
         };
 
 
-        // v2.1: zavření celé appky 18:00–18:30 (2026-11-07)
-        window.tickAppClosed = () => {
-            const el = document.getElementById('app-closed'); if (!el) return;
-            const now = Date.now(); const W = [['2026-11-07T14:46:00+01:00','2026-11-07T14:56:00+01:00'],['2026-11-07T18:00:00+01:00','2026-11-07T18:30:00+01:00']].map(w=>w.map(x=>new Date(x).getTime())); const cur = W.find(w=>now<w[1]) || W[W.length-1]; const from = cur[0], to = cur[1];
-            const owner = !!(window.isRealOwner && window.isRealOwner());
-            const on = now >= from && now < to && !(owner && window.appClosedBypass);
-            el.classList.toggle('hidden', !on); el.classList.toggle('flex', on);
-            const ob = document.getElementById('app-closed-owner'); if (ob) ob.classList.toggle('hidden', !owner);
-            if (on) { const t = Math.max(0, Math.floor((to - now)/1000)); document.getElementById('app-closed-cd').textContent = String(Math.floor(t/60)).padStart(2,'0') + ':' + String(t%60).padStart(2,'0'); }
-        };
-        setInterval(window.tickAppClosed, 1000); setTimeout(window.tickAppClosed, 200);
+
         window.verifyWanted = 'gold';
         window.renderVerifyPick = () => {
             const el = document.getElementById('verify-badge-pick'); if (!el) return;
@@ -2391,6 +2444,158 @@
             if (t === 'messages') window.renderMessages();
             window.updateToTop();
         };
+
+        // ===================== v2.2: RENOVACE =====================
+        // --- Flex Premium ✨ (jen na klientovi, bez zápisu do cloudu) ---
+        window.V22 = {
+            giftStart: new Date('2026-11-07T18:30:00+01:00').getTime(),
+            giftAcceptEnd: new Date('2026-11-10T19:30:00+01:00').getTime(),
+            giftShortEnd: new Date('2026-11-14T19:30:00+01:00').getTime(),
+            giftFullEnd: new Date('2026-11-21T19:30:00+01:00').getTime()
+        };
+        window.v22Store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch(e) { return null; } };
+        window.v22PragueDay = (t) => { try { return +new Intl.DateTimeFormat('cs-CZ', { timeZone: 'Europe/Prague', day: 'numeric' }).format(new Date(t)); } catch(e) { return new Date(t).getDate(); } };
+        window.v22MonthlyPremium = (t = Date.now()) => window.v22PragueDay(t) <= 7;
+        window.v22GiftAccepted = () => window.v22Store('flex_gift_v22') === 'accepted';
+        window.v22GiftEnd = () => window.v22GiftAccepted() ? window.V22.giftFullEnd : window.V22.giftShortEnd;
+        window.v22GiftActive = (t = Date.now()) => t >= window.V22.giftStart && t < window.v22GiftEnd();
+        window.myPremium = () => window.v22MonthlyPremium() || window.v22GiftActive();
+        window.v22OthersPremium = () => { const t = Date.now(); return window.v22MonthlyPremium(t) || (t >= window.V22.giftStart && t < window.V22.giftShortEnd); };
+        window.v22HasPremium = (h) => h && h === window.me() ? window.myPremium() : window.v22OthersPremium();
+        window.v22PremiumDaysLeft = () => {
+            const now = Date.now(); let end = 0;
+            if (window.v22GiftActive(now)) end = window.v22GiftEnd();
+            if (window.v22MonthlyPremium(now)) { let t = now; for (let i = 0; i < 9 && window.v22MonthlyPremium(t); i++) t += 86400000; end = Math.max(end, t); }
+            return end > now ? Math.max(1, Math.ceil((end - now) / 86400000)) : 0;
+        };
+        window.v22PremBadge = () => '<span class="v22-prem" title="Flex Premium">✨ Premium</span>';
+        window.v22Hhmm = (t) => { const d = new Date(t); const same = new Date().toDateString() === d.toDateString(); return (same ? '' : d.getDate() + '. ' + (d.getMonth() + 1) + '. ') + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+
+        // --- Dárek za výpadek 🎁 ---
+        window.v22AcceptGift = () => {
+            if (Date.now() >= window.V22.giftAcceptEnd) return window.showToast('Dárek už nejde přijmout 😕', true);
+            window.v22Store('flex_gift_v22', 'accepted');
+            document.getElementById('v22-gift')?.remove();
+            window.showToast('🎁 Dárek přijat! Flex Premium máš do 21. 11. 19:30 ✨');
+            window.v22Refresh();
+        };
+        window.v22LaterGift = () => { if (!window.v22GiftAccepted()) window.v22Store('flex_gift_v22', 'later'); document.getElementById('v22-gift')?.remove(); };
+        window.v22MaybeGift = () => {
+            const now = Date.now();
+            if (!window.currentUser || now < window.V22.giftStart || now >= window.V22.giftAcceptEnd) return;
+            if (window.v22Store('flex_gift_v22') || document.getElementById('v22-gift')) return;
+            const app = document.getElementById('app-container'); if (!app || app.classList.contains('hidden')) return;
+            document.body.insertAdjacentHTML('beforeend', `<div id="v22-gift" class="v22-gift"><div><div class="text-6xl mb-2">🎁</div><h2 class="text-xl font-black text-white">Omlouváme se za výpadek 🎁</h2><p class="text-[#e7e9ea] mt-2 text-sm">Dáváme vám <b>Flex Premium ✨ na 14 dní</b> zdarma – štítek ✨ Premium u jména a žádné reklamy.</p><p class="text-[#71767b] mt-2 text-xs">Přijmout jde do 10. 11. 19:30. Bez přijetí máš Premium jen 7 dní (do 14. 11. 19:30).</p><button type="button" onclick="window.v22AcceptGift()" class="mt-5 w-full py-3 rounded-full bg-white text-black font-black cursor-pointer">Přijmout dárek</button><button type="button" onclick="window.v22LaterGift()" class="mt-2 w-full py-2 rounded-full text-[#71767b] text-sm font-bold cursor-pointer">Teď ne</button></div></div>`);
+        };
+
+        // --- Reklamy (jen vlastní, fiktivní; Premium = bez reklam) ---
+        window.V22_ADS = [
+            { id: 'flexprem', icon: '✨', title: 'Flex Premium', text: 'Žádné reklamy a štítek ✨ u jména. Zdarma každý měsíc 1.–7. den!' },
+            { id: 'bubbleai', icon: '🤖', title: 'Bubble AI', text: 'Naše AI modely ti pomůžou s úkoly, nápady i vtipy. Chytřejší každý týden.' },
+            { id: 'bubbledev', icon: '📱', title: 'Zařízení Bubble', text: 'Malé, rychlé a s Flexem uvnitř. Brzy už i u tebe doma 🫧' },
+            { id: 'bubblechat', icon: '💬', title: 'Flex chat', text: 'Piš kamarádům 1:1 i ve skupinách. Mrkni do Zpráv ✉️' },
+            { id: 'bubblecomm', icon: '👥', title: 'Komunity na Flexu', text: 'Najdi lidi se stejnými koníčky a založ vlastní komunitu.' }
+        ];
+        window.v22HiddenAds = () => { try { return JSON.parse(window.v22Store('flex_ads_hidden') || '[]'); } catch(e) { return []; } };
+        window.v22HideAd = (id) => { const h = window.v22HiddenAds(); if (!h.includes(id)) h.push(id); window.v22Store('flex_ads_hidden', JSON.stringify(h)); document.querySelectorAll('[data-v22ad="' + id + '"]').forEach(el => el.remove()); window.showToast('Reklama skryta'); };
+        window.v22AdHtml = (ad, cls = 'v22-ad') => `<div class="${cls}" data-v22ad="${ad.id}"><div class="v22-ad-card relative"><div class="text-[11px] font-bold text-[#71767b] uppercase tracking-wider mb-1">Reklama</div><button type="button" class="v22-ad-x" onclick="window.v22HideAd('${ad.id}')" title="Skrýt reklamu">✕</button><div class="flex gap-3 items-start"><div class="text-3xl">${ad.icon}</div><div><div class="font-extrabold text-white">${ad.title}</div><div class="text-sm text-[#e7e9ea] mt-0.5">${ad.text}</div></div></div></div></div>`;
+        window.v22Ads = () => { const h = window.v22HiddenAds(); return window.V22_ADS.filter(a => !h.includes(a.id)); };
+
+        // --- Naplánované posty 🕒 ---
+        window.v22Pending = (p) => !!(p && p.publishAt && p.publishAt > Date.now());
+        window.v22Visible = (list) => (list || []).filter(p => !window.v22Pending(p) || p.authorHandle === window.me()).map(p => (p.publishAt && !window.v22Pending(p) && p.publishAt > (p.time || 0)) ? { ...p, time: p.publishAt } : p);
+        window.v22WithVisible = (fn) => function (...args) {
+            const all = window.DB.posts;
+            if (!Array.isArray(all) || !all.some(p => p && p.publishAt)) return fn.apply(this, args);
+            window.DB.posts = window.v22Visible(all).sort((a, b) => (b.time || 0) - (a.time || 0));
+            try { return fn.apply(this, args); } finally { window.DB.posts = all; }
+        };
+        const _v22nb = window.newPostBase;
+        window._v22pub = 0;
+        window.newPostBase = () => { const o = _v22nb(); if (window._v22pub) o.publishAt = window._v22pub; return o; };
+        const _v22sp = window.submitPost;
+        window.submitPost = async () => {
+            const sel = document.getElementById('post-schedule');
+            const hrs = sel ? (+sel.value || 0) : 0;
+            const pa = hrs ? Date.now() + hrs * 3600000 : 0;
+            const before = (window.DB.posts || []).length;
+            window._v22pub = pa;
+            try { await _v22sp(); } finally { window._v22pub = 0; }
+            if (pa && (window.DB.posts || []).length > before) { if (sel) sel.value = '0'; window.showToast('🕒 Post vyjde v ' + window.v22Hhmm(pa)); }
+        };
+
+        // --- Karta postu: ✨ Premium u jména + štítek naplánovaného postu ---
+        const _v22card = window.postCardHtml;
+        window.postCardHtml = (p, opt = {}) => {
+            let h = _v22card(p, opt);
+            try {
+                const nameEnd = esc(p.authorName || 'Neznámý') + '</span>';
+                const handleEnd = '@' + esc(p.authorHandle) + '</span>';
+                if (window.v22HasPremium(p.authorHandle)) { const i = h.indexOf(nameEnd); if (i >= 0) h = h.slice(0, i + nameEnd.length) + window.v22PremBadge() + h.slice(i + nameEnd.length); }
+                if (window.v22Pending(p)) { const j = h.indexOf(handleEnd); if (j >= 0) h = h.slice(0, j + handleEnd.length) + `<span class="v22-tag ml-1">🕒 Vyjde v ${window.v22Hhmm(p.publishAt)}</span>` + h.slice(j + handleEnd.length); }
+            } catch(e) { console.warn(e); }
+            return h;
+        };
+        const _v22rp = window.v22WithVisible(window.renderPosts);
+        window.renderPosts = () => {
+            _v22rp();
+            try {
+                const c = document.getElementById('posts-feed'); if (!c || window.myPremium()) { window.v22RenderRight(); return; }
+                const ads = window.v22Ads(); if (!ads.length) { window.v22RenderRight(); return; }
+                const kids = Array.from(c.children); let k = 0;
+                for (let i = 4; i < kids.length; i += 5) { kids[i].insertAdjacentHTML('afterend', window.v22AdHtml(ads[k % ads.length])); k++; }
+            } catch(e) { console.warn(e); }
+            window.v22RenderRight();
+        };
+        if (window.renderSearch) window.renderSearch = window.v22WithVisible(window.renderSearch);
+        if (window.openUserProfile) window.openUserProfile = window.v22WithVisible(window.openUserProfile);
+        if (window.trends) window.trends = window.v22WithVisible(window.trends);
+        if (window.renderProfile) window.renderProfile = window.v22WithVisible(window.renderProfile);
+
+        // --- Pravý panel (počítač) ---
+        window.v22RenderRight = () => {
+            const el = document.getElementById('v22-right'); if (!el || !window.currentUser) return;
+            let tr = []; try { tr = window.trends() || []; } catch(e) {}
+            const prem = window.myPremium(), days = window.v22PremiumDaysLeft();
+            const canGift = !window.v22GiftAccepted() && Date.now() >= window.V22.giftStart && Date.now() < window.V22.giftAcceptEnd;
+            el.innerHTML = `<div class="v22-box"><div class="font-extrabold text-white text-lg">Flex Premium ✨</div><div class="text-sm text-[#71767b] mt-1">${prem ? 'Máš Premium ještě ' + days + ' ' + (days === 1 ? 'den' : (days < 5 ? 'dny' : 'dní')) + '. Žádné reklamy 🎉' : 'Premium máš zdarma každý měsíc 1.–7. den.'}</div>${canGift ? '<button type="button" onclick="window.v22AcceptGift()" class="mt-3 px-4 py-2 rounded-full bg-white text-black font-bold text-sm cursor-pointer">🎁 Přijmout dárek</button>' : ''}</div>`
+                + `<div class="v22-box"><div class="font-extrabold text-white text-lg mb-2">Co se děje</div>${tr.length ? tr.slice(0, 6).map(([t, n]) => `<div onclick="window.openTag && window.openTag(${jsq(t)})" class="py-2 cursor-pointer hover:opacity-80"><div class="text-xs text-[#71767b]">Trendy</div><div class="font-bold text-white">#${esc(t)}</div><div class="text-xs text-[#71767b]">${n} ${n === 1 ? 'post' : (n < 5 ? 'posty' : 'postů')}</div></div>`).join('') : '<div class="text-sm text-[#71767b]">Zatím žádné trendy. Napiš post s #něčím ✨</div>'}</div>`
+                + (!prem && window.v22Ads().length ? window.v22AdHtml(window.v22Ads()[0], 'mb-4') : '')
+                + `<div class="text-xs text-[#71767b] px-2">Flex od bubble · v2.2</div>`;
+        };
+
+        // --- Premium v hlavičce a profilu ---
+        window.v22Refresh = () => {
+            try {
+                const prem = window.myPremium(), days = window.v22PremiumDaysLeft();
+                const ht = document.getElementById('header-title');
+                let hb = document.getElementById('v22-head-prem');
+                if (ht && !hb) { ht.insertAdjacentHTML('afterend', '<span id="v22-head-prem" class="v22-prem hidden" style="margin-left:0">✨ Premium</span>'); hb = document.getElementById('v22-head-prem'); }
+                if (hb) hb.classList.toggle('hidden', !prem);
+                const pl = document.getElementById('v22-prem-left');
+                if (pl) {
+                    const canGift = !window.v22GiftAccepted() && Date.now() >= window.V22.giftStart && Date.now() < window.V22.giftAcceptEnd;
+                    pl.classList.toggle('hidden', !prem && !canGift);
+                    const txt = prem ? '✨ Premium ti zbývá ' + days + ' ' + (days === 1 ? 'den' : (days < 5 ? 'dny' : 'dní')) : '';
+                    const btn = canGift ? ' <button type="button" onclick="window.v22AcceptGift()" class="ml-1 underline cursor-pointer">🎁 Přijmout dárek</button>' : '';
+                    if (pl.dataset.v !== txt + btn) { pl.innerHTML = txt + btn; pl.dataset.v = txt + btn; }
+                }
+                const pf = document.getElementById('profile-fullname');
+                if (pf) { const has = pf.querySelector('.v22-prem'); if (prem && !has) pf.insertAdjacentHTML('beforeend', window.v22PremBadge()); else if (!prem && has) has.remove(); }
+                const dv = document.getElementById('nav-dev-li'); if (dv && !dv.title) dv.title = 'Dev';
+            } catch(e) { console.warn(e); }
+        };
+        window.v22LastTick = Date.now();
+        setInterval(() => {
+            window.v22Refresh(); window.v22MaybeGift();
+            const now = Date.now(), last = window.v22LastTick; window.v22LastTick = now;
+            if ((window.DB.posts || []).some(p => p.publishAt && p.publishAt > last && p.publishAt <= now)) { try { window.renderPosts(); } catch(e) {} }
+        }, 2000);
+
+        // --- 2 nové styly appky ---
+        window.THEMES.graphite = { name: 'Grafit', sw: 'linear-gradient(135deg,#15171a,#4a5059 55%,#c9d1d9)' };
+        window.THEMES.sakura   = { name: 'Třešňový květ', sw: 'linear-gradient(135deg,#fff5f8,#ffd6e6 55%,#e2557f)' };
+        // ===================== /v2.2 =====================
 
         // START
         window.openAccountSwitcher();
