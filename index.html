@@ -482,7 +482,7 @@
         </main>
 
         <aside id="v22-right" class="v22-right"></aside>
-        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.2.2</div>
+        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.2.3</div>
         <button id="to-top-btn" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-brand text-white font-bold px-4 py-2 rounded-full shadow-xl text-sm cursor-pointer">⬆️ Nahoru</button>
         <!-- Bottom Nav -->
         <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-3 py-3 flex justify-between items-center z-40 pb-safe">
@@ -2498,17 +2498,22 @@
         };
         window.v22Store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch(e) { return null; } };
         window.v22PragueDay = (t) => { try { return +new Intl.DateTimeFormat('cs-CZ', { timeZone: 'Europe/Prague', day: 'numeric' }).format(new Date(t)); } catch(e) { return new Date(t).getDate(); } };
+        // v2.2.3: Premium jen po převzetí v popupu (per účet), nic automaticky
         window.v22MonthlyPremium = (t = Date.now()) => window.v22PragueDay(t) <= 7;
-        window.v22GiftAccepted = () => window.v22Store('flex_gift_v22') === 'accepted';
-        window.v22GiftEnd = () => window.v22GiftAccepted() ? window.V22.giftFullEnd : window.V22.giftShortEnd;
-        window.v22GiftActive = (t = Date.now()) => t >= window.V22.giftStart && t < window.v22GiftEnd();
-        window.myPremium = () => window.v22MonthlyPremium() || window.v22GiftActive();
-        window.v22OthersPremium = () => { const t = Date.now(); return window.v22MonthlyPremium(t) || (t >= window.V22.giftStart && t < window.V22.giftShortEnd); };
-        window.v22HasPremium = (h) => h && h === window.me() ? window.myPremium() : window.v22OthersPremium();
+        window.v22MonthKey = (t = Date.now()) => { try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Prague', year: 'numeric', month: '2-digit' }).format(new Date(t)).slice(0, 7); } catch(e) { const d = new Date(t); return d.getFullYear() + '-' + (d.getMonth() + 1); } };
+        window.v22K = (k) => k + '_' + (window.me() || 'anon');
+        window.v22GiftAccepted = () => { const k = window.v22K('flex_gift_v22'); if (window.me() && window.v22Store('flex_gift_v22') === 'accepted' && !window.v22Store(k)) { window.v22Store(k, 'accepted'); try { localStorage.removeItem('flex_gift_v22'); } catch(e) {} } return window.v22Store(k) === 'accepted'; };
+        window.v22MonthClaimed = () => window.v22Store(window.v22K('flex_month_prem_' + window.v22MonthKey())) === 'claimed';
+        window.v22GiftEnd = () => window.V22.giftFullEnd;
+        window.v22GiftActive = (t = Date.now()) => window.v22GiftAccepted() && t < window.V22.giftFullEnd;
+        window.v22MonthActive = (t = Date.now()) => window.v22MonthlyPremium(t) && window.v22MonthClaimed();
+        window.myPremium = () => !!window.currentUser && (window.v22GiftActive() || window.v22MonthActive());
+        window.v22OthersPremium = () => false;
+        window.v22HasPremium = (h) => !!h && h === window.me() && window.myPremium();
         window.v22PremiumDaysLeft = () => {
             const now = Date.now(); let end = 0;
             if (window.v22GiftActive(now)) end = window.v22GiftEnd();
-            if (window.v22MonthlyPremium(now)) { let t = now; for (let i = 0; i < 9 && window.v22MonthlyPremium(t); i++) t += 86400000; end = Math.max(end, t); }
+            if (window.v22MonthActive(now)) { let t = now; for (let i = 0; i < 9 && window.v22MonthlyPremium(t); i++) t += 86400000; end = Math.max(end, t); }
             return end > now ? Math.max(1, Math.ceil((end - now) / 86400000)) : 0;
         };
         window.v22PremBadge = () => '<span class="v22-prem" title="Flex Premium">✨ Premium</span>';
@@ -2517,23 +2522,30 @@
         // --- Dárek za výpadek 🎁 ---
         window.v22AcceptGift = () => {
             if (Date.now() >= window.V22.giftAcceptEnd) return window.showToast('Dárek už nejde přijmout 😕', true);
-            window.v22Store('flex_gift_v22', 'accepted');
+            window.v22Store(window.v22K('flex_gift_v22'), 'accepted');
             document.getElementById('v22-gift')?.remove();
             window.showToast('🎁 Dárek přijat! Flex Premium máš do 21. 11. 19:30 ✨');
             window.v22Refresh();
         };
-        window.v22LaterGift = () => { if (!window.v22GiftAccepted()) window.v22Store('flex_gift_v22', 'later'); document.getElementById('v22-gift')?.remove(); };
+        window.v22LaterGift = () => { if (!window.v22GiftAccepted()) window.v22Store(window.v22K('flex_gift_v22'), 'later'); document.getElementById('v22-gift')?.remove(); };
+        window.v22ClaimMonth = (v) => { window.v22Store(window.v22K('flex_month_prem_' + window.v22MonthKey()), v); document.getElementById('v22-gift')?.remove(); if (v === 'claimed') window.showToast('✨ Premium převzato!'); window.v22Refresh(); };
         window.v22MaybeGift = () => {
             const now = Date.now();
-            if (!window.currentUser || now < window.V22.giftStart || now >= window.V22.giftAcceptEnd) return;
-            if (window.v22Store('flex_gift_v22') || document.getElementById('v22-gift')) return;
+            if (!window.currentUser || document.getElementById('v22-gift')) return;
             const app = document.getElementById('app-container'); if (!app || app.classList.contains('hidden')) return;
-            document.body.insertAdjacentHTML('beforeend', `<div id="v22-gift" class="v22-gift"><div><div class="text-6xl mb-2">🎁</div><h2 class="text-xl font-black text-white">Omlouváme se za výpadek 🎁</h2><p class="text-[#e7e9ea] mt-2 text-sm">Dáváme vám <b>Flex Premium ✨ na 14 dní</b> zdarma – štítek ✨ Premium u jména a žádné reklamy.</p><p class="text-[#71767b] mt-2 text-xs">Přijmout jde do 10. 11. 19:30. Bez přijetí máš Premium jen 7 dní (do 14. 11. 19:30).</p><button type="button" onclick="window.v22AcceptGift()" class="mt-5 w-full py-3 rounded-full bg-white text-black font-black cursor-pointer">Přijmout dárek</button><button type="button" onclick="window.v22LaterGift()" class="mt-2 w-full py-2 rounded-full text-[#71767b] text-sm font-bold cursor-pointer">Teď ne</button></div></div>`);
+            const giftOpen = now >= window.V22.giftStart && now < window.V22.giftAcceptEnd && !window.v22Store(window.v22K('flex_gift_v22'));
+            if (!giftOpen) {
+                const mk = window.v22K('flex_month_prem_' + window.v22MonthKey());
+                if (!window.v22MonthlyPremium(now) || window.v22Store(mk) || window.v22GiftActive(now)) return;
+                document.body.insertAdjacentHTML('beforeend', `<div id="v22-gift" class="v22-gift"><div><div class="text-6xl mb-2">✨</div><h2 class="text-xl font-black text-white">Měsíční Flex Premium zdarma</h2><p class="text-[#e7e9ea] mt-2 text-sm">Každý měsíc 1.–7. den si můžeš převzít <b>Flex Premium ✨</b> – štítek u jména a žádné reklamy.</p><button type="button" onclick="window.v22ClaimMonth('claimed')" class="mt-5 w-full py-3 rounded-full bg-white text-black font-black cursor-pointer">Převzít Premium</button><button type="button" onclick="window.v22ClaimMonth('later')" class="mt-2 w-full py-2 rounded-full text-[#71767b] text-sm font-bold cursor-pointer">Teď ne</button></div></div>`);
+                return;
+            }
+            document.body.insertAdjacentHTML('beforeend', `<div id="v22-gift" class="v22-gift"><div><div class="text-6xl mb-2">🎁</div><h2 class="text-xl font-black text-white">Omlouváme se za výpadek 🎁</h2><p class="text-[#e7e9ea] mt-2 text-sm">Dáváme vám <b>Flex Premium ✨ na 14 dní</b> zdarma – štítek ✨ Premium u jména a žádné reklamy.</p><p class="text-[#71767b] mt-2 text-xs">Přijmout jde do 10. 11. 19:30. Bez přijetí Premium nedostaneš.</p><button type="button" onclick="window.v22AcceptGift()" class="mt-5 w-full py-3 rounded-full bg-white text-black font-black cursor-pointer">Přijmout dárek</button><button type="button" onclick="window.v22LaterGift()" class="mt-2 w-full py-2 rounded-full text-[#71767b] text-sm font-bold cursor-pointer">Teď ne</button></div></div>`);
         };
 
         // --- Reklamy (jen vlastní, fiktivní; Premium = bez reklam) ---
         window.V22_ADS = [
-            { id: 'flexprem', icon: '✨', title: 'Flex Premium', text: 'Žádné reklamy a štítek ✨ u jména. Zdarma každý měsíc 1.–7. den!' },
+            { id: 'flexprem', icon: '✨', title: 'Flex Premium', text: 'Žádné reklamy a štítek ✨ u jména. Převezmi si ho zdarma každý měsíc 1.–7. den!' },
             { id: 'bubbleai', icon: '🤖', title: 'Bubble AI', text: 'Naše AI modely ti pomůžou s úkoly, nápady i vtipy. Chytřejší každý týden.' },
             { id: 'bubbledev', icon: '📱', title: 'Zařízení Bubble', text: 'Malé, rychlé a s Flexem uvnitř. Brzy už i u tebe doma 🫧' },
             { id: 'bubblechat', icon: '💬', title: 'Flex chat', text: 'Piš kamarádům 1:1 i ve skupinách. Mrkni do Zpráv ✉️' },
@@ -2601,10 +2613,10 @@
             let tr = []; try { tr = window.trends() || []; } catch(e) {}
             const prem = window.myPremium(), days = window.v22PremiumDaysLeft();
             const canGift = !window.v22GiftAccepted() && Date.now() >= window.V22.giftStart && Date.now() < window.V22.giftAcceptEnd;
-            el.innerHTML = `<div class="v22-box"><div class="font-extrabold text-white text-lg">Flex Premium ✨</div><div class="text-sm text-[#71767b] mt-1">${prem ? 'Máš Premium ještě ' + days + ' ' + (days === 1 ? 'den' : (days < 5 ? 'dny' : 'dní')) + '. Žádné reklamy 🎉' : 'Premium máš zdarma každý měsíc 1.–7. den.'}</div>${canGift ? '<button type="button" onclick="window.v22AcceptGift()" class="mt-3 px-4 py-2 rounded-full bg-white text-black font-bold text-sm cursor-pointer">🎁 Přijmout dárek</button>' : ''}</div>`
+            el.innerHTML = `<div class="v22-box"><div class="font-extrabold text-white text-lg">Flex Premium ✨</div><div class="text-sm text-[#71767b] mt-1">${prem ? 'Máš Premium ještě ' + days + ' ' + (days === 1 ? 'den' : (days < 5 ? 'dny' : 'dní')) + '. Žádné reklamy 🎉' : 'Premium si můžeš převzít zdarma každý měsíc 1.–7. den.'}</div>${canGift ? '<button type="button" onclick="window.v22AcceptGift()" class="mt-3 px-4 py-2 rounded-full bg-white text-black font-bold text-sm cursor-pointer">🎁 Přijmout dárek</button>' : ''}</div>`
                 + `<div class="v22-box"><div class="font-extrabold text-white text-lg mb-2">Co se děje</div>${tr.length ? tr.slice(0, 6).map(([t, n]) => `<div onclick="window.openTag && window.openTag(${jsq(t)})" class="py-2 cursor-pointer hover:opacity-80"><div class="text-xs text-[#71767b]">Trendy</div><div class="font-bold text-white">#${esc(t)}</div><div class="text-xs text-[#71767b]">${n} ${n === 1 ? 'post' : (n < 5 ? 'posty' : 'postů')}</div></div>`).join('') : '<div class="text-sm text-[#71767b]">Zatím žádné trendy. Napiš post s #něčím ✨</div>'}</div>`
                 + (!prem && window.v22Ads().length ? window.v22AdHtml(window.v22Ads()[0], 'mb-4') : '')
-                + `<div class="text-xs text-[#71767b] px-2">Flex od bubble · v2.2</div>`;
+                + `<div class="text-xs text-[#71767b] px-2">Flex od bubble · v2.2.3</div>`;
         };
 
         // --- Premium v hlavičce a profilu ---
