@@ -20,6 +20,9 @@
         };
     </script>
     <style>
+        #tab-dev.dev-locked > :not(#dev-closed) { display: none !important; }
+        #tab-dev:not(.dev-locked) > #dev-closed { display: none !important; }
+
         /* v2.0.1: okna se vejdou na mobil a dají se posouvat */
         #gen-modal > div, #theme-modal > div, #bio-modal > div, #comment-modal > div { max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         #theme-modal .theme-close-bar { position: sticky; bottom: -1.5rem; background: #16181c; padding-top: .5rem; padding-bottom: .25rem; }
@@ -275,7 +278,20 @@
             </section>
 
             <!-- TAB: DEV HUB -->
-            <section id="tab-dev" class="tab-content animate-fade p-4 hidden">
+            <section id="tab-dev" class="tab-content animate-fade p-4 hidden dev-locked">
+                <!-- v2.0.2: dev menu se renovuje (zámek do v2.1, 2026-11-07 15:00) -->
+                <div id="dev-closed" class="relative overflow-hidden min-h-[70vh] flex flex-col items-center justify-center text-center px-6 py-16">
+                    <div class="absolute left-[-10%] right-[-10%] top-10 h-10 rotate-[-6deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">🚧 DEV MENU SE RENOVUJE 🚧</span></div>
+                    <div class="absolute left-[-10%] right-[-10%] bottom-12 h-10 rotate-[5deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">🚧 ZAVŘENO DO DNEŠNÍCH 15:00 🚧</span></div>
+                    <div class="relative z-10 bg-black/80 border border-[#facc15]/60 rounded-2xl p-6 max-w-sm">
+                        <div class="text-4xl mb-2">🛠️</div>
+                        <h2 class="text-xl font-black text-white">Dev menu se renovuje</h2>
+                        <p class="text-[#e7e9ea] mt-2 text-sm">Dnes v 15:00 se otevře úplně nové – víc nástrojů a hezčí vzhled. 💪</p>
+                        <p class="text-[#71767b] mt-4 text-xs uppercase tracking-widest font-bold">Otevíráme za</p>
+                        <div id="dev-countdown" class="text-3xl font-black text-[#facc15] mt-1 tabular-nums">--:--:--</div>
+                        <button id="dev-owner-open" type="button" onclick="document.getElementById('tab-dev').classList.remove('dev-locked')" class="hidden mt-5 px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer">Otevřít starý panel (jen vlastník)</button>
+                    </div>
+                </div>
                 <div class="bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/30 rounded-3xl p-6 mb-6">
                     <h3 class="text-xl font-extrabold text-amber-400 flex items-center gap-2 mb-1">
                         <i class="fa-solid fa-code"></i>
@@ -329,7 +345,7 @@
             </section>
         </main>
 
-        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.0.1</div>
+        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.0.2</div>
         <button id="to-top-btn" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-brand text-white font-bold px-4 py-2 rounded-full shadow-xl text-sm cursor-pointer">⬆️ Nahoru</button>
         <!-- Bottom Nav -->
         <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-3 py-3 flex justify-between items-center z-40 pb-safe">
@@ -1246,6 +1262,17 @@
             window.showToast('Profil uložen');
         };
 
+
+        // v2.0.2: odpočet zámku dev menu
+        window.tickDevCountdown = () => {
+            const el = document.getElementById('dev-countdown'); if (!el) return;
+            const ob = document.getElementById('dev-owner-open'); if (ob) ob.classList.toggle('hidden', !(window.isRealOwner && window.isRealOwner()));
+            const ms = new Date('2026-11-07T15:00:00+01:00').getTime() - Date.now();
+            if (ms <= 0) { el.textContent = 'Už brzy! 🚀'; return; }
+            const t = Math.floor(ms/1000), h = Math.floor(t/3600), m = Math.floor(t%3600/60), sec = t%60;
+            el.textContent = [h,m,sec].map(x => String(x).padStart(2,'0')).join(':');
+        };
+        setInterval(window.tickDevCountdown, 1000); setTimeout(window.tickDevCountdown, 300);
         window.switchTab = (tabName) => {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             const tEl = document.getElementById(`tab-${tabName}`);
