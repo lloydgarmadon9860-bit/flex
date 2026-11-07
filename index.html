@@ -20,10 +20,6 @@
         };
     </script>
     <style>
-        #tab-verify.verify-locked > :not(#verify-closed) { display: none !important; }
-
-        #tab-dev.dev-locked > :not(#dev-closed) { display: none !important; }
-        #tab-dev:not(.dev-locked) > #dev-closed { display: none !important; }
 
         /* v2.0.1: okna se vejdou na mobil a dají se posouvat */
         #gen-modal > div, #theme-modal > div, #bio-modal > div, #comment-modal > div { max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -88,11 +84,46 @@
         .skel { background: linear-gradient(90deg, #16181c 25%, #24272b 50%, #16181c 75%); background-size: 200% 100%; animation: skel 1.2s infinite; border-radius: 8px; }
         @keyframes skel { from { background-position: 200% 0; } to { background-position: -200% 0; } }
         body.theme-matrix { --t-bg: #000 repeating-linear-gradient(0deg, rgba(0,255,70,.04) 0 1px, transparent 1px 3px); --t-card: rgba(0,18,6,.9); --t-header: rgba(0,0,0,.9); --t-border: #00ff4655; --t-text: #7dff9b; --t-muted: #2fbf5a; --t-accent: #00ff46; --t-input: #000d04; --t-btntext: #001a08; --t-font: 'Courier New', monospace; }
+        /* ===== v2.1: nové dev menu ===== */
+        .dev-stat { background: rgba(0,0,0,.35); border: 1px solid rgba(245,158,11,.25); border-radius: 14px; padding: .5rem .25rem; text-align: center; min-width: 0; }
+        .dev-stat-n { font-weight: 900; font-size: 1.15rem; color: #fbbf24; line-height: 1.2; font-variant-numeric: tabular-nums; }
+        .dev-stat-l { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: #71767b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dev-tabs { background: linear-gradient(#000 70%, transparent); }
+        body[class*="theme-"] .dev-tabs { background: var(--t-header); border-radius: 14px; padding-left: .25rem; padding-right: .25rem; }
+        .dev-tab { flex: 0 0 auto; display: inline-flex; align-items: center; gap: .4rem; padding: .45rem .8rem; border-radius: 9999px; font-size: 12px; font-weight: 800; color: #a1a1aa; background: #16181c; border: 1px solid #2f3336; cursor: pointer; white-space: nowrap; }
+        .dev-tab.active { color: #000; background: #fbbf24; border-color: #fbbf24; }
+        .dev-pill { background: #ef4444; color: #fff; border-radius: 9999px; font-size: 10px; padding: 0 .4rem; line-height: 1.3rem; min-width: 1.3rem; text-align: center; }
+        .dev-chip { padding: .3rem .7rem; border-radius: 9999px; font-size: 12px; font-weight: 700; color: #a1a1aa; border: 1px solid #2f3336; background: transparent; cursor: pointer; }
+        .dev-chip.active { color: #fbbf24; border-color: rgba(251,191,36,.6); background: rgba(251,191,36,.1); }
+        .dev-h { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #71767b; margin-bottom: .75rem; display: flex; align-items: center; gap: .5rem; }
+        .dev-bar { height: 6px; border-radius: 9999px; background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        @media (max-width: 420px) { .dev-stat-n { font-size: 1rem; } .dev-tab { padding: .4rem .65rem; } }
+        /* ===== v2.1: nové styly appky ===== */
+        body.theme-ocean { --t-bg: radial-gradient(ellipse at 50% -10%, #0a6f8f 0%, transparent 55%), radial-gradient(ellipse at 10% 110%, #04324a 0%, transparent 60%), linear-gradient(180deg, #012a42 0%, #00121f 100%); --t-card: rgba(2,36,56,.82); --t-header: rgba(1,26,42,.88); --t-border: #5ff2e055; --t-text: #e3fbff; --t-muted: #86bccb; --t-accent: #2ee6d6; --t-input: rgba(0,22,36,.85); --t-btntext: #002a2e; --t-font: 'Inter', sans-serif; }
+        body.theme-ocean .bg-\[\#16181c\], body.theme-ocean .rounded-2xl.border { box-shadow: 0 6px 18px rgba(0,10,20,.45), inset 0 1px 0 rgba(95,242,224,.12); }
+        body.theme-ocean h1, body.theme-ocean h2 { text-shadow: 0 0 10px #2ee6d655; }
+        body.theme-sunset { --t-bg: linear-gradient(180deg, #2b1055 0%, #7a1f5c 45%, #d6336c 75%, #ff8a3d 100%); --t-card: rgba(40,12,52,.78); --t-header: rgba(36,10,60,.88); --t-border: #ffb34766; --t-text: #fff3e6; --t-muted: #e7b4c6; --t-accent: #ffb347; --t-input: rgba(30,8,44,.82); --t-btntext: #3a1200; --t-font: 'Trebuchet MS', 'Inter', sans-serif; }
+        body.theme-sunset .bg-\[\#16181c\], body.theme-sunset .rounded-2xl.border { box-shadow: 0 6px 20px rgba(255,120,60,.15); }
+        body.theme-sunset h1, body.theme-sunset h2 { text-shadow: 0 0 12px #ff8a3d88; }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body class="min-h-screen flex flex-col items-center justify-start select-none bg-black">
 
+    
+    <!-- v2.1: celá appka zavřená 2026-11-07 19:00–19:30 (renovace) -->
+    <div id="app-closed" class="fixed inset-0 z-[200] bg-black hidden flex-col items-center justify-center text-center px-6 overflow-hidden">
+        <div class="absolute left-[-10%] right-[-10%] top-16 h-10 rotate-[-6deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">⚠️ SERVERY JSOU DOLE ⚠️</span></div>
+        <div class="absolute left-[-10%] right-[-10%] bottom-16 h-10 rotate-[5deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">⚠️ ERROR 503 ⚠️</span></div>
+        <div class="relative z-10 bg-black/80 border border-[#facc15]/60 rounded-2xl p-6 max-w-sm">
+            <div class="text-5xl mb-2">🔌</div>
+            <h2 class="text-2xl font-black text-white">Promiň, ale servery Bubble Flexu jsou dole</h2>
+            <p class="text-[#e7e9ea] mt-2 text-sm">Pracujeme na tom. Zkus to prosím za chvíli a obnov stránku. 🙏</p>
+            <p class="text-[#71767b] mt-4 text-xs uppercase tracking-widest font-bold">Zkus to znovu za</p>
+            <div id="app-closed-cd" class="text-4xl font-black text-[#facc15] mt-1 tabular-nums">--:--</div>
+            <button id="app-closed-owner" type="button" onclick="window.appClosedBypass=true;window.tickAppClosed()" class="hidden mt-5 px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer">Vstoupit (jen vlastník)</button>
+        </div>
+    </div>
     <div id="toast-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none w-11/12 max-w-sm"></div>
 
     <!-- LOGIN / ACCOUNT SWITCHER OVERLAY -->
@@ -266,24 +297,13 @@
             </section>
 
             <!-- TAB: VERIFICATION -->
-            <section id="tab-verify" class="tab-content animate-fade p-4 hidden verify-locked">
-                <!-- v2.0.3: odznaky se renovují (zámek do v2.1, 2026-11-07 15:00) -->
-                <div id="verify-closed" class="relative overflow-hidden min-h-[70vh] flex flex-col items-center justify-center text-center px-6 py-16">
-                    <div class="absolute left-[-10%] right-[-10%] top-10 h-10 rotate-[-6deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">🚧 ODZNAKY SE RENOVUJÍ 🚧</span></div>
-                    <div class="absolute left-[-10%] right-[-10%] bottom-12 h-10 rotate-[5deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">🚧 ZAVŘENO DO DNEŠNÍCH 15:00 🚧</span></div>
-                    <div class="relative z-10 bg-black/80 border border-[#facc15]/60 rounded-2xl p-6 max-w-sm">
-                        <div class="text-4xl mb-2">🏅</div>
-                        <h2 class="text-xl font-black text-white">Žádosti o odznak jsou zavřené</h2>
-                        <p class="text-[#e7e9ea] mt-2 text-sm">Dnes v 15:00 se otevřou znovu. Tvoje odznaky zůstávají! 💪</p>
-                        <p class="text-[#71767b] mt-4 text-xs uppercase tracking-widest font-bold">Otevíráme za</p>
-                        <div id="verify-countdown" class="text-3xl font-black text-[#facc15] mt-1 tabular-nums">--:--:--</div>
-                    </div>
-                </div>
+            <section id="tab-verify" class="tab-content animate-fade p-4 hidden">
                 <div class="bg-gradient-to-br from-[#16181c] to-black border border-[#2f3336] rounded-3xl p-6 mb-6 shadow-xl relative overflow-hidden">
                     <div class="absolute top-0 right-0 p-6 opacity-10 text-brand text-6xl pointer-events-none"><i class="fa-solid fa-certificate"></i></div>
                     <h3 class="text-xl font-extrabold text-white mb-2 relative z-10">Získejte ověřený odznak</h3>
                     <p class="text-sm text-[#71767b] mb-6 relative z-10">Přidejte se k elitě Flex od bubble. Napište nám, proč byste měli získat odznak a počkejte na schválení.</p>
                     <div class="space-y-4 relative z-10">
+                        <div><div class="text-xs font-bold text-[#71767b] uppercase tracking-wider mb-2">Jaký odznak chceš?</div><div id="verify-badge-pick" class="flex flex-wrap gap-2"></div></div>
                         <textarea id="verify-reason" rows="4" placeholder="Kdo jste a proč odznak potřebujete?..." class="w-full bg-black border border-[#2f3336] rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-brand resize-none"></textarea>
                         <button type="button" onclick="window.submitVerification()" class="w-full bg-white text-black hover:bg-[#e2e8f0] font-extrabold py-3.5 rounded-2xl text-sm transition cursor-pointer">Odeslat žádost</button>
                     </div>
@@ -292,37 +312,63 @@
             </section>
 
             <!-- TAB: DEV HUB -->
-            <section id="tab-dev" class="tab-content animate-fade p-4 hidden dev-locked">
-                <!-- v2.0.2: dev menu se renovuje (zámek do v2.1, 2026-11-07 15:00) -->
-                <div id="dev-closed" class="relative overflow-hidden min-h-[70vh] flex flex-col items-center justify-center text-center px-6 py-16">
-                    <div class="absolute left-[-10%] right-[-10%] top-10 h-10 rotate-[-6deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">🚧 DEV MENU SE RENOVUJE 🚧</span></div>
-                    <div class="absolute left-[-10%] right-[-10%] bottom-12 h-10 rotate-[5deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">🚧 ZAVŘENO DO DNEŠNÍCH 15:00 🚧</span></div>
-                    <div class="relative z-10 bg-black/80 border border-[#facc15]/60 rounded-2xl p-6 max-w-sm">
-                        <div class="text-4xl mb-2">🛠️</div>
-                        <h2 class="text-xl font-black text-white">Dev menu se renovuje</h2>
-                        <p class="text-[#e7e9ea] mt-2 text-sm">Dnes v 15:00 se otevře úplně nové – víc nástrojů a hezčí vzhled. 💪</p>
-                        <p class="text-[#71767b] mt-4 text-xs uppercase tracking-widest font-bold">Otevíráme za</p>
-                        <div id="dev-countdown" class="text-3xl font-black text-[#facc15] mt-1 tabular-nums">--:--:--</div>
-                        <button id="dev-owner-open" type="button" onclick="document.getElementById('tab-dev').classList.remove('dev-locked')" class="hidden mt-5 px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer">Otevřít starý panel (jen vlastník)</button>
+            <!-- TAB: DEV HUB (v2.1 – nové dev menu) -->
+            <section id="tab-dev" class="tab-content animate-fade p-3 sm:p-4 hidden">
+                <div class="dev-hero bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-transparent border border-amber-500/30 rounded-3xl p-4 sm:p-5 mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-2xl bg-amber-400/15 border border-amber-400/40 flex items-center justify-center text-amber-400 text-lg flex-shrink-0"><i class="fa-solid fa-code"></i></div>
+                        <div class="min-w-0">
+                            <h3 class="text-lg sm:text-xl font-extrabold text-amber-400 leading-tight truncate">Dev menu</h3>
+                            <p id="dev-role-line" class="text-xs text-[#71767b] truncate">Řídící centrum sítě Flex</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2 mt-4">
+                        <div class="dev-stat"><div id="dev-c-users" class="dev-stat-n">0</div><div class="dev-stat-l">uživatelé</div></div>
+                        <div class="dev-stat"><div id="dev-c-posts" class="dev-stat-n">0</div><div class="dev-stat-l">posty</div></div>
+                        <div class="dev-stat"><div id="dev-c-bans" class="dev-stat-n text-red-400">0</div><div class="dev-stat-l">bany</div></div>
+                        <div class="dev-stat"><div id="dev-c-verifs" class="dev-stat-n">0</div><div class="dev-stat-l">ověření</div></div>
                     </div>
                 </div>
-                <div class="bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/30 rounded-3xl p-6 mb-6">
-                    <h3 class="text-xl font-extrabold text-amber-400 flex items-center gap-2 mb-1">
-                        <i class="fa-solid fa-code"></i>
-                        <span>Developer & Owner Console</span>
-                    </h3>
-                    <p class="text-sm text-[#71767b]">Vítejte v řídícím centru, Vlastníku. Odtud ovládáte celou síť.</p>
+                <div id="dev-tabs" class="dev-tabs no-scrollbar flex gap-1.5 overflow-x-auto mb-4 sticky top-0 z-10 py-2">
+                    <button type="button" data-devtab="users" onclick="window.setDevTab('users')" class="dev-tab"><i class="fa-solid fa-users"></i> Uživatelé</button>
+                    <button type="button" data-devtab="bans" onclick="window.setDevTab('bans')" class="dev-tab"><i class="fa-solid fa-gavel"></i> Bany <span id="dev-tab-bans-n" class="dev-pill hidden"></span></button>
+                    <button type="button" data-devtab="badges" onclick="window.setDevTab('badges')" class="dev-tab"><i class="fa-solid fa-certificate"></i> Odznaky <span id="dev-tab-verifs-n" class="dev-pill hidden"></span></button>
+                    <button type="button" data-devtab="stats" onclick="window.setDevTab('stats')" class="dev-tab"><i class="fa-solid fa-chart-simple"></i> Statistiky</button>
+                    <button type="button" data-devtab="tools" onclick="window.setDevTab('tools')" class="dev-tab"><i class="fa-solid fa-screwdriver-wrench"></i> Nástroje</button>
                 </div>
-                <div class="space-y-8">
-                    <div>
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-[#71767b] mb-3 flex items-center gap-2"><i class="fa-solid fa-users-gear"></i> Příchozí žádosti o odznak</h4>
-                        <div id="dev-requests-container" class="space-y-3"></div>
+
+                <div id="dev-pane-users" class="dev-pane">
+                    <div class="bg-[#16181c] border border-[#2f3336] rounded-2xl px-3 py-2.5 flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-magnifying-glass text-[#71767b] text-sm"></i>
+                        <input type="text" id="dev-user-search" oninput="window.renderDevUsers()" placeholder="Hledat jméno, @handle, e-mail..." class="w-full bg-transparent text-sm text-white focus:outline-none">
                     </div>
-                    <div>
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-[#71767b] mb-3 flex items-center gap-2"><i class="fa-solid fa-user-shield"></i> Všichni uživatelé na tvé síti</h4>
-                        <p class="text-xs text-[#71767b] mb-3">Dokonalý přehled, správa BANů a Dev práv.</p>
-                        <div id="dev-all-users-container" class="space-y-3"></div>
+                    <div class="flex gap-1.5 mb-3 flex-wrap">
+                        <button type="button" data-devfilter="all" onclick="window.setDevFilter('all')" class="dev-chip">Vše</button>
+                        <button type="button" data-devfilter="banned" onclick="window.setDevFilter('banned')" class="dev-chip">Jen zabanovaní</button>
+                        <button type="button" data-devfilter="devs" onclick="window.setDevFilter('devs')" class="dev-chip">Jen devové</button>
+                        <span id="dev-user-count" class="text-xs text-[#71767b] ml-auto self-center"></span>
                     </div>
+                    <div id="dev-all-users-container" class="space-y-3"></div>
+                </div>
+
+                <div id="dev-pane-bans" class="dev-pane hidden">
+                    <h4 class="dev-h"><i class="fa-solid fa-gavel"></i> Aktivní bany</h4>
+                    <div id="dev-bans-container" class="space-y-2"></div>
+                </div>
+
+                <div id="dev-pane-badges" class="dev-pane hidden">
+                    <h4 class="dev-h"><i class="fa-solid fa-users-gear"></i> Příchozí žádosti o odznak</h4>
+                    <div id="dev-requests-container" class="space-y-3"></div>
+                    <h4 class="dev-h mt-6"><i class="fa-solid fa-certificate"></i> Udělené odznaky</h4>
+                    <div id="dev-badges-container" class="space-y-2"></div>
+                </div>
+
+                <div id="dev-pane-stats" class="dev-pane hidden">
+                    <div id="dev-stats-container" class="space-y-4"></div>
+                </div>
+
+                <div id="dev-pane-tools" class="dev-pane hidden">
+                    <div id="dev-tools-container" class="space-y-3"></div>
                 </div>
             </section>
 
@@ -359,7 +405,7 @@
             </section>
         </main>
 
-        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.0.3</div>
+        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.1</div>
         <button id="to-top-btn" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-brand text-white font-bold px-4 py-2 rounded-full shadow-xl text-sm cursor-pointer">⬆️ Nahoru</button>
         <!-- Bottom Nav -->
         <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-3 py-3 flex justify-between items-center z-40 pb-safe">
@@ -461,9 +507,11 @@
             white: getOfficialBadgeSVG('text-white'),
             red: getOfficialBadgeSVG('text-red-500'),
             orange: getOfficialBadgeSVG('text-orange-500'),
-            pink: getOfficialBadgeSVG('text-pink-400')
+            pink: getOfficialBadgeSVG('text-pink-400'),
+            cyan: getOfficialBadgeSVG('text-cyan-400'),
+            silver: getOfficialBadgeSVG('text-slate-300')
         };
-        window.BADGE_NAMES = { gold: 'Zlatý', blue: 'Modrý', purple: 'Fialový', green: 'Zelený', white: 'Bílý 🤍 Kamarád', red: 'Červený', orange: 'Oranžový', pink: 'Růžový' };
+        window.BADGE_NAMES = { gold: 'Zlatý', blue: 'Modrý', purple: 'Fialový', green: 'Zelený', white: 'Bílý 🤍 Kamarád', red: 'Červený', orange: 'Oranžový', pink: 'Růžový', cyan: 'Tyrkysový', silver: 'Stříbrný' };
         window.getBadgeIcon = (type) => BADGES_SVG[type] || '';
 
         window.showToast = (msg, isError = false) => {
@@ -1055,14 +1103,31 @@
             else box.innerHTML = '';
         };
 
+
+        // v2.1: zavření celé appky 19:00–19:30 (2026-11-07)
+        window.tickAppClosed = () => {
+            const el = document.getElementById('app-closed'); if (!el) return;
+            const now = Date.now(), from = new Date('2026-11-07T19:00:00+01:00').getTime(), to = new Date('2026-11-07T19:30:00+01:00').getTime();
+            const owner = !!(window.isRealOwner && window.isRealOwner());
+            const on = now >= from && now < to && !(owner && window.appClosedBypass);
+            el.classList.toggle('hidden', !on); el.classList.toggle('flex', on);
+            const ob = document.getElementById('app-closed-owner'); if (ob) ob.classList.toggle('hidden', !owner);
+            if (on) { const t = Math.max(0, Math.floor((to - now)/1000)); document.getElementById('app-closed-cd').textContent = String(Math.floor(t/60)).padStart(2,'0') + ':' + String(t%60).padStart(2,'0'); }
+        };
+        setInterval(window.tickAppClosed, 1000); setTimeout(window.tickAppClosed, 200);
+        window.verifyWanted = 'gold';
+        window.renderVerifyPick = () => {
+            const el = document.getElementById('verify-badge-pick'); if (!el) return;
+            el.innerHTML = Object.keys(window.BADGE_NAMES).map(k => `<button type="button" onclick="window.verifyWanted='${k}';window.renderVerifyPick()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold cursor-pointer ${window.verifyWanted===k?'border-white bg-white/10 text-white':'border-[#2f3336] text-[#a1a1aa]'}"><span class="w-4 h-4 inline-flex">${window.getBadgeIcon(k)}</span>${window.BADGE_NAMES[k]}</button>`).join('');
+        };
+        setTimeout(window.renderVerifyPick, 500);
         window.submitVerification = async () => {
-            if (document.getElementById('tab-verify')?.classList.contains('verify-locked')) return window.showToast('🚧 Žádosti o odznak jsou do 15:00 zavřené.', true);
             if (window.checkBanStatus(window.currentUser.handle)) return;
             const r = document.getElementById('verify-reason').value.trim();
             if (!r) return;
             const reqId = `${window.currentUser.handle}_${Date.now()}`;
             
-            const newReq = { id: reqId, handle: window.currentUser.handle, fullname: window.currentUser.fullname, avatar: window.currentUser.avatar, reason: r, time: Date.now() };
+            const newReq = { id: reqId, handle: window.currentUser.handle, fullname: window.currentUser.fullname, avatar: window.currentUser.avatar, reason: r, wanted: (window.BADGE_NAMES[window.verifyWanted] ? window.verifyWanted : 'gold'), time: Date.now() };
             window.DB.verifs = window.DB.verifs || [];
             window.DB.verifs.push(newReq);
             document.getElementById('verify-reason').value = ''; 
@@ -1076,16 +1141,18 @@
 
         window.renderDevRequests = () => {
             const container = document.getElementById('dev-requests-container');
+            if (!container) return;
+            const E = window.escHtml, Q = (v) => window.escHtml(JSON.stringify(String(v == null ? '' : v)));
             const reqs = window.DB.verifs || [];
-            if (reqs.length === 0) { container.innerHTML = `<div class="text-[#71767b] text-sm p-4 bg-[#16181c] rounded-2xl border border-[#2f3336] text-center font-medium">Čisto! Žádné nové žádosti.</div>`; return; }
+            if (reqs.length === 0) { container.innerHTML = `<div class="text-[#71767b] text-sm p-4 bg-[#16181c] rounded-2xl border border-[#2f3336] text-center font-medium">Čisto! Žádné nové žádosti. ✨</div>`; return; }
             container.innerHTML = reqs.map(r => `
-                <div class="bg-[#16181c] border border-[#2f3336] rounded-2xl p-5 shadow-lg">
-                    <div class="flex gap-3 mb-3"><img src="${r.avatar}" class="w-10 h-10 rounded-full border border-[#2f3336]"><div class="font-bold text-white">${r.fullname}<div class="text-xs text-[#71767b] font-normal">@${r.handle}</div></div></div>
-                    <p class="text-sm text-[#e7e9ea] bg-black p-3 rounded-xl border border-[#2f3336] mb-4">${r.reason}</p>
+                <div class="bg-[#16181c] border border-[#2f3336] rounded-2xl p-4 shadow-lg">
+                    <div class="flex gap-3 mb-3 min-w-0"><img src="${E(r.avatar)}" class="w-10 h-10 rounded-full border border-[#2f3336] object-cover flex-shrink-0"><div class="font-bold text-white min-w-0 truncate">${E(r.fullname)}<div class="text-xs text-[#71767b] font-normal truncate">@${E(r.handle)}${r.time ? ' · ' + window.relTime(r.time) : ''}</div></div></div>
+                    <p class="text-sm text-[#e7e9ea] bg-black p-3 rounded-xl border border-[#2f3336] mb-4 whitespace-pre-wrap break-words">${E(r.reason)}</p>
                     <div class="flex flex-wrap gap-2">
-                        <button onclick="window.resolveVerification('${r.id}', '${r.handle}', 'gold')" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg text-xs font-bold transition cursor-pointer">Zlatý</button>
-                        <button onclick="window.resolveVerification('${r.id}', '${r.handle}', 'blue')" class="px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-xs font-bold transition cursor-pointer">Modrý</button>
-                        <button onclick="window.resolveVerification('${r.id}', null, 'reject')" class="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-bold ml-auto transition cursor-pointer">Zamítnout</button>
+                        ${r.wanted && window.BADGE_NAMES[r.wanted] ? `<div class="w-full text-xs text-[#a1a1aa] mb-1">Chce: <b class="text-white">${E(window.BADGE_NAMES[r.wanted])}</b></div>` : ''}
+                        ${Object.keys(window.BADGE_NAMES).map(k => `<button onclick="window.resolveVerification(${Q(r.id)}, ${Q(r.handle)}, '${k}')" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${r.wanted===k?'bg-white/15 text-white ring-1 ring-white/60':'bg-white/5 hover:bg-white/10 text-[#e7e9ea]'}"><span class="w-3.5 h-3.5 inline-flex">${window.getBadgeIcon(k)}</span>${E(window.BADGE_NAMES[k].split(' ')[0])}</button>`).join('')}
+                        <button onclick="window.resolveVerification(${Q(r.id)}, null, 'reject')" class="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-bold ml-auto transition cursor-pointer">Zamítnout</button>
                     </div>
                 </div>
             `).join('');
@@ -1102,48 +1169,157 @@
             window.showToast(color === 'reject' ? 'Zamítnuto' : 'Uděleno');
         };
 
+        // ===== v2.1: nové dev menu =====
+        window.devTab = window.devTab || 'users';
+        window.devFilter = window.devFilter || 'all';
+        window.setDevTab = (t) => { window.devTab = t; window.renderDevUsers(); };
+        window.setDevFilter = (f) => { window.devFilter = f; window.renderDevUsers(); };
+        window.devActiveBans = () => { const b = window.getDict('bans'), now = Date.now(); return Object.keys(b).filter(h => h.charAt(0) !== '_' && typeof b[h] === 'number' && b[h] > now).map(h => ({ h, until: b[h] })).sort((a, c) => a.until - c.until); };
+        window.devFmtLeft = (until) => { const ms = until - Date.now(); if (ms <= 0) return 'vypršel'; if (ms > 31536000000) return 'navždy'; const t = Math.floor(ms / 1000), d = Math.floor(t / 86400), h = Math.floor(t % 86400 / 3600), m = Math.floor(t % 3600 / 60), s = t % 60; return (d ? d + 'd ' : '') + [h, m, s].map(x => String(x).padStart(2, '0')).join(':'); };
+        window.devActivity = () => {
+            const posts = {}, last = {};
+            const bump = (h, t) => { if (!h) return; t = t || 0; if (t > (last[h] || 0)) last[h] = t; };
+            (window.DB.posts || []).forEach(p => { if (p.authorHandle) posts[p.authorHandle] = (posts[p.authorHandle] || 0) + 1; bump(p.authorHandle, p.time); });
+            (window.DB.comments || []).forEach(c => bump(c.authorHandle, c.time));
+            (window.DB.msgs || []).forEach(m => bump(m.sender, m.time));
+            (window.DB.chatMsgs || []).forEach(m => bump(m.sender, m.time));
+            (window.DB.stories || []).forEach(s => bump(s.author, s.time));
+            return { posts, last };
+        };
+        setInterval(() => { document.querySelectorAll('#tab-dev [data-ban-until]').forEach(el => { el.textContent = window.devFmtLeft(Number(el.getAttribute('data-ban-until'))); }); }, 1000);
+
         window.renderDevUsers = () => {
             const container = document.getElementById('dev-all-users-container');
+            if (!container) return;
+            const E = window.escHtml, Q = (v) => window.escHtml(JSON.stringify(String(v == null ? '' : v)));
             const users = window.DB.users || [], badges = window.getDict('badges'), bans = window.getDict('bans'), devs = window.getDict('devs');
-            container.innerHTML = users.map(u => {
+            const iAmOwner = window.isOwnerSession === true;
+            const act = window.devActivity(), activeBans = window.devActiveBans(), verifs = window.DB.verifs || [];
+
+            // hlavička + záložky
+            const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            setT('dev-c-users', users.length); setT('dev-c-posts', (window.DB.posts || []).length); setT('dev-c-bans', activeBans.length); setT('dev-c-verifs', verifs.length);
+            setT('dev-role-line', (window.isRealOwner() ? 'Vlastník' : (iAmOwner ? 'Vlastník (Google)' : 'Developer')) + ' · @' + (window.currentUser ? window.currentUser.handle : ''));
+            const pill = (id, n) => { const el = document.getElementById(id); if (el) { el.textContent = n; el.classList.toggle('hidden', !n); } };
+            pill('dev-tab-bans-n', activeBans.length); pill('dev-tab-verifs-n', verifs.length);
+            document.querySelectorAll('#dev-tabs [data-devtab]').forEach(b => b.classList.toggle('active', b.getAttribute('data-devtab') === window.devTab));
+            document.querySelectorAll('#tab-dev .dev-pane').forEach(p => p.classList.toggle('hidden', p.id !== 'dev-pane-' + window.devTab));
+            document.querySelectorAll('#tab-dev [data-devfilter]').forEach(b => b.classList.toggle('active', b.getAttribute('data-devfilter') === window.devFilter));
+
+            // Uživatelé
+            const q = ((document.getElementById('dev-user-search') || {}).value || '').trim().toLowerCase().replace(/^@/, '');
+            const list = users.filter(u => {
                 const isBanned = bans[u.handle] && bans[u.handle] > Date.now();
                 const isDev = u.handle === 'Flex' || devs[u.handle];
-                const iAmOwner = window.isOwnerSession === true;
+                if (window.devFilter === 'banned' && !isBanned) return false;
+                if (window.devFilter === 'devs' && !isDev) return false;
+                if (q && ![u.handle, u.fullname, u.email].some(x => String(x || '').toLowerCase().includes(q))) return false;
+                return true;
+            }).sort((a, c) => (act.last[c.handle] || 0) - (act.last[a.handle] || 0));
+            setT('dev-user-count', list.length + ' / ' + users.length);
+            container.innerHTML = list.length ? list.map(u => {
+                const isBanned = bans[u.handle] && bans[u.handle] > Date.now();
+                const isDev = u.handle === 'Flex' || devs[u.handle];
                 const canBan = iAmOwner || !isDev;
+                const H = Q(u.handle);
+                const lastT = act.last[u.handle];
                 return `
-                <div class="bg-[#16181c] border ${isBanned?'border-red-500':'border-[#2f3336]'} rounded-2xl p-4 sm:p-5 shadow-lg mb-3">
-                    <div class="flex items-center gap-3">
-                        <img src="${u.avatar}" class="w-12 h-12 rounded-full object-cover border border-[#2f3336]">
-                        <div class="min-w-0">
-                            <div class="font-bold text-white flex items-center truncate">${u.fullname} ${window.getBadgeIcon(badges[u.handle])}</div>
-                            <div class="text-xs text-[#71767b] truncate">@${u.handle} | ${u.email}</div>
-                            ${isDev?'<div class="text-[10px] uppercase text-amber-400 font-bold mt-1 bg-amber-500/10 inline-block px-2 py-0.5 rounded border border-amber-500/20"><i class="fa-solid fa-code"></i> Developer</div>':''}
-                            ${isBanned?'<div class="text-[10px] uppercase text-red-500 font-bold mt-1 bg-red-500/10 inline-block px-2 py-0.5 rounded border border-red-500/20"><i class="fa-solid fa-lock"></i> Zabanován</div>':''}
+                <div class="bg-[#16181c] border ${isBanned?'border-red-500':'border-[#2f3336]'} rounded-2xl p-3.5 sm:p-4 shadow-lg">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <img src="${E(u.avatar)}" class="w-11 h-11 rounded-full object-cover border border-[#2f3336] flex-shrink-0">
+                        <div class="min-w-0 flex-1">
+                            <div class="font-bold text-white flex items-center min-w-0"><span class="truncate">${E(u.fullname)}</span> ${window.getBadgeIcon(badges[u.handle])}</div>
+                            <div class="text-xs text-[#71767b] truncate">@${E(u.handle)}${u.email ? ' | ' + E(u.email) : ''}</div>
+                            <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                                <span class="text-[10px] text-[#71767b] bg-black/40 px-2 py-0.5 rounded border border-[#2f3336]">📝 ${act.posts[u.handle] || 0} ${(act.posts[u.handle] || 0) === 1 ? 'post' : ((act.posts[u.handle] || 0) > 1 && (act.posts[u.handle] || 0) < 5 ? 'posty' : 'postů')}</span>
+                                <span class="text-[10px] text-[#71767b] bg-black/40 px-2 py-0.5 rounded border border-[#2f3336]">🕒 ${lastT ? window.relTime(lastT) : 'bez aktivity'}</span>
+                                ${isDev?'<span class="text-[10px] uppercase text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20"><i class="fa-solid fa-code"></i> Developer</span>':''}
+                                ${isBanned?`<span class="text-[10px] uppercase text-red-500 font-bold bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20"><i class="fa-solid fa-lock"></i> Zabanován · <span data-ban-until="${Number(bans[u.handle])}">${window.devFmtLeft(bans[u.handle])}</span></span>`:''}
+                            </div>
                         </div>
                     </div>
-                    ${(window.isRealOwner() && u.handle !== 'Flex') ? `<div class="mt-3 flex items-center gap-2"><span class="text-xs text-[#71767b]">🪙 ${window.walletBal(u.handle)}</span><button onclick="window.giveCoins('${window.escHtml(u.handle)}')" class="px-3 py-1 bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 rounded-lg text-xs font-bold cursor-pointer">Dát coiny</button></div>` : ''}
+                    ${(window.isRealOwner() && u.handle !== 'Flex') ? `<div class="mt-3 flex items-center gap-2"><span class="text-xs text-[#71767b]">🪙 ${window.walletBal(u.handle)}</span><button onclick="window.giveCoins(${H})" class="px-3 py-1 bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 rounded-lg text-xs font-bold cursor-pointer">Dát coiny</button></div>` : ''}
                     ${(u.handle !== window.currentUser.handle && u.handle !== 'Flex' && canBan) ? `
-                    <div class="mt-4 pt-4 border-t border-[#2f3336] space-y-3">
+                    <div class="mt-3 pt-3 border-t border-[#2f3336] space-y-2.5">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-xs text-[#71767b] font-bold w-full sm:w-auto">BAN:</span>
-                            <button onclick="window.setBan('${u.handle}', 1)" class="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold transition cursor-pointer">1m</button>
-                            <button onclick="window.setBan('${u.handle}', 5)" class="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold transition cursor-pointer">5m</button>
-                            ${iAmOwner ? `<button onclick="window.setBan('${u.handle}', 60)" class="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold transition cursor-pointer">1h</button>
-                            <button onclick="window.setBan('${u.handle}', -1)" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-bold transition cursor-pointer">Perma</button>` : ''}
-                            <button onclick="window.setBan('${u.handle}', 0)" class="px-3 py-1 bg-[#2f3336] hover:bg-[#3e4246] text-white rounded-lg text-xs font-bold sm:ml-auto transition cursor-pointer">Zrušit</button>
+                            <span class="text-xs text-[#71767b] font-bold w-14">BAN:</span>
+                            <button onclick="window.setBan(${H}, 1)" class="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold transition cursor-pointer">1m</button>
+                            <button onclick="window.setBan(${H}, 5)" class="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold transition cursor-pointer">5m</button>
+                            ${iAmOwner ? `<button onclick="window.setBan(${H}, 60)" class="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold transition cursor-pointer">1h</button>
+                            <button onclick="window.setBan(${H}, -1)" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-bold transition cursor-pointer">Perma</button>` : ''}
+                            <button onclick="window.setBan(${H}, 0)" class="px-3 py-1 bg-[#2f3336] hover:bg-[#3e4246] text-white rounded-lg text-xs font-bold ml-auto transition cursor-pointer">Zrušit</button>
                         </div>
                         ${iAmOwner ? `<div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-xs text-[#71767b] font-bold w-full sm:w-auto">ODZNAK:</span>
-                            ${Object.keys(window.BADGE_NAMES).map(c => `<button onclick="window.giveBadge('${u.handle}','${c}')" class="px-3 py-1 bg-[#2f3336] hover:bg-[#3e4246] text-white rounded-lg text-xs font-bold transition cursor-pointer">${window.BADGE_NAMES[c]}</button>`).join('')}
-                            <button onclick="window.giveBadge('${u.handle}','none')" class="px-3 py-1 bg-red-500/10 text-red-400 rounded-lg text-xs font-bold cursor-pointer">Odebrat</button>
+                            <span class="text-xs text-[#71767b] font-bold w-14">ODZNAK:</span>
+                            ${Object.keys(window.BADGE_NAMES).map(c => `<button onclick="window.giveBadge(${H},'${c}')" class="px-2.5 py-1 bg-[#2f3336] hover:bg-[#3e4246] text-white rounded-lg text-xs font-bold transition cursor-pointer">${window.BADGE_NAMES[c]}</button>`).join('')}
+                            <button onclick="window.giveBadge(${H},'none')" class="px-2.5 py-1 bg-red-500/10 text-red-400 rounded-lg text-xs font-bold cursor-pointer">Odebrat</button>
                         </div>` : ''}
                         ${iAmOwner ? `<div class="flex items-center gap-2">
-                            <span class="text-xs text-amber-400 font-bold w-12">DEV:</span>
-                            ${isDev ? `<button onclick="window.toggleDev('${u.handle}', false)" class="px-3 py-1 bg-[#2f3336] hover:bg-[#3e4246] text-white rounded-lg text-xs font-bold transition cursor-pointer">Odebrat práva</button>` : `<button onclick="window.toggleDev('${u.handle}', true)" class="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg text-xs font-bold transition cursor-pointer">Udělit práva</button>`}
+                            <span class="text-xs text-amber-400 font-bold w-14">DEV:</span>
+                            ${isDev ? `<button onclick="window.toggleDev(${H}, false)" class="px-3 py-1 bg-[#2f3336] hover:bg-[#3e4246] text-white rounded-lg text-xs font-bold transition cursor-pointer">Odebrat práva</button>` : `<button onclick="window.toggleDev(${H}, true)" class="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg text-xs font-bold transition cursor-pointer">Udělit práva</button>`}
                         </div>` : ''}
                     </div>` : ''}
                 </div>`;
-            }).join('');
+            }).join('') : `<div class="text-[#71767b] text-sm p-4 bg-[#16181c] rounded-2xl border border-[#2f3336] text-center">Nikdo neodpovídá filtru. 🔍</div>`;
+
+            // Bany
+            const bc = document.getElementById('dev-bans-container');
+            if (bc) bc.innerHTML = activeBans.length ? activeBans.map(({ h, until }) => {
+                const u = (users.find(x => x.handle === h)) || {};
+                const isDev = h === 'Flex' || devs[h];
+                const canUnban = h !== window.currentUser.handle && h !== 'Flex' && (iAmOwner || !isDev);
+                return `<div class="bg-[#16181c] border border-red-500/50 rounded-2xl p-3 flex items-center gap-3 min-w-0">
+                    <img src="${E(u.avatar || window.avatarOf(h))}" class="w-10 h-10 rounded-full object-cover border border-[#2f3336] flex-shrink-0">
+                    <div class="min-w-0 flex-1"><div class="font-bold text-white text-sm truncate">${E(u.fullname || h)}</div><div class="text-xs text-[#71767b] truncate">@${E(h)}</div></div>
+                    <div class="text-right flex-shrink-0"><div class="text-[10px] uppercase text-[#71767b] font-bold">zbývá</div><div class="text-sm font-black text-red-400 tabular-nums" data-ban-until="${Number(until)}">${window.devFmtLeft(until)}</div></div>
+                    ${canUnban ? `<button onclick="window.setBan(${Q(h)}, 0)" class="px-3 py-1.5 bg-[#2f3336] hover:bg-[#3e4246] text-white rounded-lg text-xs font-bold cursor-pointer flex-shrink-0">Zrušit</button>` : ''}
+                </div>`;
+            }).join('') : `<div class="text-[#71767b] text-sm p-4 bg-[#16181c] rounded-2xl border border-[#2f3336] text-center">Žádné aktivní bany. 😇</div>`;
+
+            // Odznaky – udělené
+            const bdc = document.getElementById('dev-badges-container');
+            if (bdc) {
+                const withB = Object.keys(badges).filter(h => h.charAt(0) !== '_' && badges[h]);
+                bdc.innerHTML = withB.length ? withB.map(h => { const u = (users.find(x => x.handle === h)) || {}; return `<div class="bg-[#16181c] border border-[#2f3336] rounded-2xl p-3 flex items-center gap-3 min-w-0">
+                    <img src="${E(u.avatar || window.avatarOf(h))}" class="w-9 h-9 rounded-full object-cover border border-[#2f3336] flex-shrink-0">
+                    <div class="min-w-0 flex-1"><div class="font-bold text-white text-sm flex items-center min-w-0"><span class="truncate">${E(u.fullname || h)}</span> ${window.getBadgeIcon(badges[h])}</div><div class="text-xs text-[#71767b] truncate">@${E(h)} · ${E((window.BADGE_NAMES || {})[badges[h]] || badges[h])}</div></div>
+                    ${iAmOwner && h !== 'Flex' ? `<button onclick="window.devManageUser(${Q(h)})" class="px-3 py-1 bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 rounded-lg text-xs font-bold cursor-pointer flex-shrink-0">Spravovat</button>` : ''}
+                </div>`; }).join('') : `<div class="text-[#71767b] text-sm p-4 bg-[#16181c] rounded-2xl border border-[#2f3336] text-center">Zatím nikdo nemá odznak.</div>`;
+            }
+
+            // Statistiky
+            const sc = document.getElementById('dev-stats-container');
+            if (sc && window.devTab === 'stats') {
+                const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+                const postsToday = (window.DB.posts || []).filter(p => (p.time || 0) >= d0.getTime()).length;
+                const commentsToday = (window.DB.comments || []).filter(c => (c.time || 0) >= d0.getTime()).length;
+                const top = Object.entries(act.posts).sort((a, c) => c[1] - a[1]).slice(0, 5);
+                const maxP = top.length ? top[0][1] : 1;
+                const tags = {}; (window.DB.posts || []).forEach(p => window.tagsOf(window.plainText(p)).forEach(t => { tags[t] = (tags[t] || 0) + 1; }));
+                const topTags = Object.entries(tags).sort((a, c) => c[1] - a[1]).slice(0, 8);
+                const card = (title, icon, body) => `<div class="bg-[#16181c] border border-[#2f3336] rounded-2xl p-4"><h4 class="dev-h"><i class="fa-solid ${icon}"></i> ${title}</h4>${body}</div>`;
+                sc.innerHTML =
+                    `<div class="grid grid-cols-2 gap-2"><div class="dev-stat"><div class="dev-stat-n">${postsToday}</div><div class="dev-stat-l">posty dnes</div></div><div class="dev-stat"><div class="dev-stat-n">${commentsToday}</div><div class="dev-stat-l">komentáře dnes</div></div></div>` +
+                    card('Top 5 aktivních uživatelů', 'fa-ranking-star', top.length ? top.map(([h, n], i) => { const u = (users.find(x => x.handle === h)) || {}; return `<div class="py-2"><div class="flex items-center gap-2 text-sm min-w-0"><span class="text-amber-400 font-black w-5">${i + 1}.</span><img src="${E(u.avatar || window.avatarOf(h))}" class="w-6 h-6 rounded-full object-cover flex-shrink-0"><span class="text-white font-bold truncate">${E(u.fullname || h)}</span><span class="text-[#71767b] text-xs truncate">@${E(h)}</span><span class="ml-auto text-xs text-[#71767b] flex-shrink-0">${n} 📝</span></div><div class="dev-bar mt-1.5" style="width:${Math.max(6, Math.round(n / maxP * 100))}%"></div></div>`; }).join('') : '<div class="text-sm text-[#71767b]">Zatím žádné posty.</div>') +
+                    card('Top hashtagy', 'fa-hashtag', topTags.length ? `<div class="flex flex-wrap gap-2">${topTags.map(([t, n]) => `<button type="button" onclick="window.openTag(${Q(t)})" class="px-3 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-400 text-xs font-bold cursor-pointer">#${E(t)} <span class="text-[#71767b]">${n}</span></button>`).join('')}</div>` : '<div class="text-sm text-[#71767b]">Zatím žádné #hashtagy.</div>');
+            }
+
+            // Nástroje
+            const tc = document.getElementById('dev-tools-container');
+            if (tc && window.devTab === 'tools') {
+                const tool = (icon, title, desc, btn) => `<div class="bg-[#16181c] border border-[#2f3336] rounded-2xl p-4 flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-400 flex items-center justify-center flex-shrink-0"><i class="fa-solid ${icon}"></i></div><div class="min-w-0 flex-1"><div class="text-sm font-bold text-white">${title}</div><div class="text-xs text-[#71767b]">${desc}</div></div>${btn}</div>`;
+                const b = (on, label) => `<button type="button" onclick="${on}" class="px-3 py-1.5 bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 rounded-lg text-xs font-bold cursor-pointer flex-shrink-0">${label}</button>`;
+                tc.innerHTML =
+                    tool('fa-rotate', 'Obnovit panel', 'Znovu vykreslí všechna data v dev menu.', b("window.triggerUpdate();window.showToast('Panel obnoven 🔄')", 'Obnovit')) +
+                    tool('fa-palette', 'Můj odznak', 'Nastavení vlastního odznaku najdeš v profilu.', b("window.switchTab('profile');setTimeout(()=>document.getElementById('owner-badge-manager')?.scrollIntoView({behavior:'smooth'}),150)", 'Otevřít')) +
+                    tool('fa-clipboard', 'Kopírovat přehled', 'Zkopíruje počty uživatelů, postů a banů.', b("window.devCopySummary()", 'Kopírovat')) +
+                    `<div class="text-xs text-[#71767b] p-3 bg-black/40 border border-[#2f3336] rounded-2xl"><b class="text-amber-400">Tvoje práva:</b> ${iAmOwner ? 'vlastník – bany 1m/5m/1h/Perma, odznaky, dev práva' + (window.isRealOwner() ? ', coiny' : '') : 'developer – bany max 5 minut, ne na devy ani vlastníka'}.</div>`;
+            }
+        };
+        window.devManageUser = (h) => { window.devTab = 'users'; window.devFilter = 'all'; const i = document.getElementById('dev-user-search'); if (i) i.value = h; window.renderDevUsers(); window.scrollTo(0, 0); };
+        window.devCopySummary = async () => {
+            const t = `Flex – přehled (${new Date().toLocaleString('cs-CZ')})\nUživatelé: ${(window.DB.users || []).length}\nPosty: ${(window.DB.posts || []).length}\nAktivní bany: ${window.devActiveBans().length}\nČekající ověření: ${(window.DB.verifs || []).length}`;
+            try { await navigator.clipboard.writeText(t); window.showToast('Přehled zkopírován 📋'); } catch(e) { window.showToast('Kopírování se nepovedlo.', true); }
         };
 
         window.setBan = async (handle, mins) => {
@@ -1278,23 +1454,6 @@
         };
 
 
-        // v2.0.2: odpočet zámku dev menu
-        window.tickVerifyCountdown = () => {
-            const el = document.getElementById('verify-countdown'); if (!el) return;
-            const ms = new Date('2026-11-07T15:00:00+01:00').getTime() - Date.now();
-            if (ms <= 0) { el.textContent = 'Už brzy! 🚀'; return; }
-            const t = Math.floor(ms/1000); el.textContent = [Math.floor(t/3600), Math.floor(t%3600/60), t%60].map(x => String(x).padStart(2,'0')).join(':');
-        };
-        setInterval(window.tickVerifyCountdown, 1000);
-        window.tickDevCountdown = () => {
-            const el = document.getElementById('dev-countdown'); if (!el) return;
-            const ob = document.getElementById('dev-owner-open'); if (ob) ob.classList.toggle('hidden', !(window.isRealOwner && window.isRealOwner()));
-            const ms = new Date('2026-11-07T15:00:00+01:00').getTime() - Date.now();
-            if (ms <= 0) { el.textContent = 'Už brzy! 🚀'; return; }
-            const t = Math.floor(ms/1000), h = Math.floor(t/3600), m = Math.floor(t%3600/60), sec = t%60;
-            el.textContent = [h,m,sec].map(x => String(x).padStart(2,'0')).join(':');
-        };
-        setInterval(window.tickDevCountdown, 1000); setTimeout(window.tickDevCountdown, 300);
         window.switchTab = (tabName) => {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             const tEl = document.getElementById(`tab-${tabName}`);
@@ -1515,6 +1674,9 @@
         // ---------- 2 nové styly appky ----------
         window.THEMES.aurora = { name: 'Polární záře', sw: 'linear-gradient(135deg,#03111a,#3ef0b0 55%,#a35cff)' };
         window.THEMES.candy  = { name: 'Cukrová vata', sw: 'linear-gradient(135deg,#ffd1e8,#cfe3ff 55%,#fff1b8)' };
+        // v2.1: další 2 styly
+        window.THEMES.ocean  = { name: 'Hlubiny oceánu', sw: 'linear-gradient(160deg,#01243a,#0a6f8f 55%,#5ff2e0)' };
+        window.THEMES.sunset = { name: 'Západ slunce', sw: 'linear-gradient(180deg,#2b1055 0%,#d6336c 55%,#ffb347 100%)' };
 
         // ---------- Emoji výběr ----------
         window.FAV_EMOJI = ['😀','😂','😍','🥳','😎','🔥','👍','❤️','🎉','🚀'];
