@@ -482,7 +482,7 @@
         </main>
 
         <aside id="v22-right" class="v22-right"></aside>
-        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.2.1</div>
+        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.2.2</div>
         <button id="to-top-btn" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-brand text-white font-bold px-4 py-2 rounded-full shadow-xl text-sm cursor-pointer">⬆️ Nahoru</button>
         <!-- Bottom Nav -->
         <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-3 py-3 flex justify-between items-center z-40 pb-safe">
@@ -882,7 +882,12 @@
                     window.currentUser = acc;
                     (async () => {
                         if (window.auth && !window.auth.currentUser) { try { await signInAnonymously(window.auth); } catch(e) {} }
-                        if (!(await window.claimHandle(acc.handle))) { window.showToast('Přihlas se k @' + acc.handle + ' e-mailem a heslem.', true); return; }
+                        if (!(await window.claimHandle(acc.handle))) {
+                            window.currentUser = null;
+                            const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+                            set('auth-fullname', acc.fullname); set('auth-handle', acc.handle); set('auth-email', acc.email);
+                            const p = document.getElementById('auth-pass'); if (p) { p.value = ''; p.scrollIntoView({behavior:'smooth', block:'center'}); setTimeout(() => p.focus(), 300); }
+                            window.showToast('Účet @' + acc.handle + ' je chráněný 🔒 Údaje jsem vyplnil, zadej jen heslo.', true); return; }
                         window.initCloudSync();
                         window.finishLogin();
                     })();
