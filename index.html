@@ -64,6 +64,20 @@
         button:hover { transform: translateY(-1px); }
         button:active { transform: scale(.97); }
         #posts-feed img.rounded-2xl { box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+        /* ===== v2.0 ===== */
+        body.theme-aurora { --t-bg: radial-gradient(ellipse at 20% 0%, #0f5f4a 0%, transparent 55%), radial-gradient(ellipse at 85% 10%, #4b1d7a 0%, transparent 50%), linear-gradient(180deg, #03111a 0%, #050814 100%); --t-card: rgba(8,28,36,.82); --t-header: rgba(3,14,22,.88); --t-border: #3ef0b055; --t-text: #e6fff6; --t-muted: #8fc7b8; --t-accent: #3ef0b0; --t-input: rgba(2,16,22,.85); --t-btntext: #02140f; --t-font: 'Inter', sans-serif; }
+        body.theme-aurora .bg-\[\#16181c\], body.theme-aurora .rounded-2xl.border { box-shadow: 0 0 18px #3ef0b022, 0 0 30px #a35cff18; }
+        body.theme-aurora h1, body.theme-aurora h2 { text-shadow: 0 0 10px #3ef0b088; }
+        body.theme-candy { --t-bg: linear-gradient(135deg, #ffe3f1 0%, #e6f0ff 50%, #fff6d9 100%); --t-card: rgba(255,255,255,.82); --t-header: rgba(255,236,246,.9); --t-border: #f5a3cf; --t-text: #4a2140; --t-muted: #9a6a8c; --t-accent: #ff5fae; --t-input: #fff8fc; --t-btntext: #ffffff; --t-font: 'Trebuchet MS', 'Comic Sans MS', 'Inter', sans-serif; }
+        body.theme-candy .bg-\[\#16181c\], body.theme-candy .rounded-2xl.border { box-shadow: 0 4px 14px rgba(255,95,174,.18); }
+        body.theme-candy .glass-header { backdrop-filter: blur(10px); }
+        @keyframes heartPop { 0% { transform: scale(1); } 30% { transform: scale(1.6); } 60% { transform: scale(.9); } 100% { transform: scale(1); } }
+        .heart-pop { animation: heartPop .55s ease-out; display: inline-block; }
+        .story-ring { background: conic-gradient(#f59e0b, #ec4899, #8b5cf6, #1d9bf0, #f59e0b); padding: 2.5px; border-radius: 9999px; }
+        .story-ring.seen { background: #3a3d41; }
+        @keyframes storyBar { from { width: 0%; } to { width: 100%; } }
+        .skel { background: linear-gradient(90deg, #16181c 25%, #24272b 50%, #16181c 75%); background-size: 200% 100%; animation: skel 1.2s infinite; border-radius: 8px; }
+        @keyframes skel { from { background-position: 200% 0; } to { background-position: -200% 0; } }
         body.theme-matrix { --t-bg: #000 repeating-linear-gradient(0deg, rgba(0,255,70,.04) 0 1px, transparent 1px 3px); --t-card: rgba(0,18,6,.9); --t-header: rgba(0,0,0,.9); --t-border: #00ff4655; --t-text: #7dff9b; --t-muted: #2fbf5a; --t-accent: #00ff46; --t-input: #000d04; --t-btntext: #001a08; --t-font: 'Courier New', monospace; }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
@@ -139,10 +153,13 @@
                     <p id="header-subtitle" class="text-xs text-[#71767b] handle-display font-medium"></p>
                 </div>
             </div>
+            <div class="flex items-center gap-2">
+            <button id="bell-btn" onclick="window.openNotifs()" title="Oznámení" class="relative bg-[#16181c] hover:bg-[#202327] border border-[#2f3336] w-9 h-9 rounded-full text-white flex items-center justify-center cursor-pointer">🔔<span id="bell-count" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center"></span></button>
             <button onclick="window.openAccountSwitcher()" class="bg-[#16181c] hover:bg-[#202327] border border-[#2f3336] text-xs font-bold px-4 py-2 rounded-full text-white transition flex items-center gap-2 cursor-pointer">
                 <i class="fa-solid fa-users"></i>
                 <span class="hidden sm:inline">Změnit účet</span>
             </button>
+            </div>
         </header>
 
         <main class="flex-1">
@@ -153,25 +170,29 @@
                     <button id="feed-filter-following" onclick="window.setFeedFilter('following')" class="flex-1 py-3.5 text-center border-b-4 border-transparent hover:bg-[#16181c]/50 transition cursor-pointer">Sledovaní</button>
                 </div>
 
+                <div id="stories-bar" class="flex gap-3 overflow-x-auto no-scrollbar px-4 py-3 border-b border-[#2f3336]"></div>
                 <div class="p-4 border-b border-[#2f3336] bg-black">
                     <div class="flex gap-3">
                         <img id="compose-avatar" src="" class="w-11 h-11 rounded-full object-cover flex-shrink-0">
                         <div class="flex-1">
                             <textarea id="post-text" rows="2" oninput="window.updateCharCount()" placeholder="Co se právě děje?" class="w-full bg-transparent text-white placeholder-[#71767b] focus:outline-none resize-none text-lg"></textarea>
                             <div id="mention-suggest" class="hidden flex flex-wrap gap-2 mb-2"></div>
+                            <div id="emoji-row" class="hidden flex flex-wrap gap-1 mb-2"></div>
+                            <div id="draft-note" class="hidden text-xs text-[#71767b] mb-1">📝 Koncept uložen</div>
                             <div id="poll-box" class="hidden mb-3 space-y-2"><div class="text-xs text-[#71767b]">📊 Anketa: napiš otázku do postu a aspoň 2 možnosti:</div>
                                 <input id="poll-o1" maxlength="40" placeholder="Možnost 1" class="w-full bg-[#16181c] border border-[#2f3336] rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
                                 <input id="poll-o2" maxlength="40" placeholder="Možnost 2" class="w-full bg-[#16181c] border border-[#2f3336] rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
                                 <input id="poll-o3" maxlength="40" placeholder="Možnost 3 (nepovinná)" class="w-full bg-[#16181c] border border-[#2f3336] rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
                                 <input id="poll-o4" maxlength="40" placeholder="Možnost 4 (nepovinná)" class="w-full bg-[#16181c] border border-[#2f3336] rounded-xl px-3 py-2 text-sm text-white focus:outline-none"></div>
                             <input type="text" id="post-image" placeholder="Odkaz na obrázek (nepovinné URL)..." class="w-full bg-[#16181c] border border-[#2f3336] rounded-xl px-3 py-2.5 text-sm text-white placeholder-[#71767b] focus:outline-none focus:border-brand mb-3 hidden">
-                            <div class="flex items-center justify-between pt-3 border-t border-[#2f3336]/60">
+                            <div class="flex items-center justify-between gap-1 pt-3 border-t border-[#2f3336]/60 flex-wrap">
                                 <button type="button" onclick="document.getElementById('post-image').classList.toggle('hidden')" class="text-brand hover:bg-brand/10 p-2.5 rounded-full transition text-base cursor-pointer">
                                     <i class="fa-solid fa-image"></i>
                                 </button>
                                 <button type="button" onclick="document.getElementById('poll-box').classList.toggle('hidden')" class="text-brand hover:bg-brand/10 p-2.5 rounded-full transition text-base cursor-pointer" title="Anketa">📊</button>
-                                <div class="flex items-center gap-3"><span id="post-char-count" class="text-sm text-[#71767b] tabular-nums">0/280</span>
-                                <button type="button" onclick="window.submitPost()" class="bg-brand hover:bg-brand-hover text-white font-bold px-6 py-2 rounded-full text-sm transition shadow-md cursor-pointer">Publikovat</button></div>
+                                <button type="button" onclick="window.toggleEmojiRow('emoji-row','post-text')" class="hover:bg-brand/10 p-2.5 rounded-full transition text-base cursor-pointer" title="Emoji">😀</button>
+                                <div class="flex items-center gap-2 ml-auto flex-shrink-0"><span id="post-char-count" class="text-xs sm:text-sm text-[#71767b] tabular-nums">0/280</span>
+                                <button type="button" onclick="window.submitPost()" class="bg-brand hover:bg-brand-hover text-white font-bold px-4 sm:px-6 py-2 rounded-full text-sm transition shadow-md cursor-pointer whitespace-nowrap flex-shrink-0">Publikovat</button></div>
                             </div>
                         </div>
                     </div>
@@ -179,37 +200,60 @@
                 <div id="posts-feed" class="divide-y divide-[#2f3336]"></div>
             </section>
 
-            <!-- TAB: MESSAGES -->
+            <!-- TAB: MESSAGES (v2.0 nový chat) -->
             <section id="tab-messages" class="tab-content animate-fade hidden">
-                <!-- v1.2.j: chat se renovuje (zámek do v2.0) -->
-                <div id="chat-closed" class="relative overflow-hidden min-h-[70vh] flex flex-col items-center justify-center text-center px-6 py-16">
-                    <div class="absolute left-[-10%] right-[-10%] top-10 h-10 rotate-[-6deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">🚧 FLEX CHAT SE RENOVUJE 🚧</span></div>
-                    <div class="absolute left-[-10%] right-[-10%] bottom-12 h-10 rotate-[5deg] flex items-center justify-center font-black text-black text-xs sm:text-sm tracking-wider shadow-lg" style="background:repeating-linear-gradient(45deg,#facc15 0 22px,#111 22px 44px);"><span class="bg-[#facc15] px-3 py-1 rounded">🚧 ZAVŘENO DO ZÍTRA 10:00 🚧</span></div>
-                    <div class="relative z-10 bg-black/80 border border-[#facc15]/60 rounded-2xl p-6 max-w-sm">
-                        <div class="text-4xl mb-2">🚧</div>
-                        <h2 class="text-xl font-black text-white">Flex chat se renovuje</h2>
-                        <p class="text-[#e7e9ea] mt-2 text-sm">Zítra v 10:00 se znovu otevře pro veřejnost. Omlouváme se! 🙏</p>
-                        <p class="text-[#71767b] mt-4 text-xs uppercase tracking-widest font-bold">Otevíráme za</p>
-                        <div id="chat-countdown" class="text-3xl font-black text-[#facc15] mt-1 tabular-nums">--:--:--</div>
+                <div id="chat-list-view">
+                    <div class="p-4 border-b border-[#2f3336] flex items-center justify-between">
+                        <h3 class="text-lg font-extrabold text-white">💬 Konverzace</h3>
+                        <button type="button" onclick="window.openNewChat()" class="bg-brand text-white font-bold px-4 py-2 rounded-full text-sm cursor-pointer">✏️ Nový chat</button>
                     </div>
+                    <div id="chat-list" class="divide-y divide-[#2f3336]"></div>
+                    <div id="chat-old-list"></div>
                 </div>
-                <div id="chat-old" class="hidden">
-                <div class="p-4 border-b border-[#2f3336] bg-[#16181c]/80 sticky top-[65px] z-30 glass-header">
-                    <div class="flex items-center bg-black border border-[#2f3336] rounded-xl px-4 py-2.5 focus-within:border-brand transition">
+                <div id="chat-room-view" class="hidden flex flex-col">
+                    <div class="p-3 border-b border-[#2f3336] flex items-center gap-3 glass-header sticky top-[65px] z-30">
+                        <button type="button" onclick="window.closeChatRoom()" class="w-9 h-9 rounded-full hover:bg-[#16181c] text-white cursor-pointer"><i class="fa-solid fa-arrow-left"></i></button>
+                        <div id="chat-room-icon" class="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-[#16181c] text-lg"></div>
+                        <div class="min-w-0"><div id="chat-room-title" class="font-bold text-white truncate"></div><div id="chat-room-sub" class="text-xs text-[#71767b] truncate"></div></div>
+                    </div>
+                    <div id="chat-room-msgs" class="p-4 space-y-2 overflow-y-auto" style="height: calc(100vh - 290px); min-height: 260px;"></div>
+                    <div id="chat-room-compose" class="p-3 border-t border-[#2f3336] bg-black">
+                        <div id="chat-emoji-row" class="hidden flex flex-wrap gap-1 mb-2"></div>
+                        <div class="flex gap-2 items-center">
+                            <button type="button" onclick="window.toggleEmojiRow('chat-emoji-row','dm-input')" class="w-10 h-10 rounded-full hover:bg-[#16181c] cursor-pointer">😀</button>
+                            <input type="text" id="dm-input" maxlength="1000" placeholder="Napište zprávu..." onkeydown="if(event.key==='Enter'){event.preventDefault();window.submitMessage();}" class="flex-1 bg-[#16181c] border border-[#2f3336] rounded-full px-5 py-3 text-sm text-white focus:outline-none focus:border-brand transition">
+                            <button type="button" onclick="window.submitMessage()" class="bg-brand text-white w-12 h-12 rounded-full font-bold flex items-center justify-center hover:bg-brand-hover transition cursor-pointer"><i class="fa-solid fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                    <div id="chat-room-readonly" class="hidden p-3 border-t border-[#2f3336] text-center text-xs text-[#71767b]"></div>
+                </div>
+            </section>
+
+            <!-- TAB: SEARCH (v2.0) -->
+            <section id="tab-search" class="tab-content animate-fade hidden">
+                <div class="p-4 border-b border-[#2f3336] glass-header sticky top-[65px] z-30">
+                    <div class="flex items-center bg-black border border-[#2f3336] rounded-full px-4 py-2.5 focus-within:border-brand transition">
                         <i class="fa-solid fa-magnifying-glass text-[#71767b] mr-2"></i>
-                        <input type="text" id="dm-recipient" oninput="window.renderMessages()" placeholder="Zadejte @handle příjemce zprávy..." class="w-full bg-transparent text-sm text-white focus:outline-none">
+                        <input type="text" id="search-input" oninput="window.renderSearch()" placeholder="Hledat posty, lidi, #hashtagy..." class="w-full bg-transparent text-sm text-white focus:outline-none">
                     </div>
                 </div>
-                <div id="messages-container" class="p-4 space-y-4 min-h-[400px] flex flex-col justify-end"></div>
-                <div class="p-4 border-t border-[#2f3336] bg-black sticky bottom-[60px]">
-                    <div class="flex gap-2">
-                        <input type="text" id="dm-input" placeholder="Napište zprávu..." class="flex-1 bg-[#16181c] border border-[#2f3336] rounded-full px-5 py-3 text-sm text-white focus:outline-none focus:border-brand transition">
-                        <button type="button" onclick="window.submitMessage()" class="bg-brand text-white w-12 h-12 rounded-full font-bold flex items-center justify-center hover:bg-brand-hover transition cursor-pointer">
-                            <i class="fa-solid fa-paper-plane"></i>
-                        </button>
+                <div id="search-results"></div>
+            </section>
+
+            <!-- TAB: COMMUNITIES (v2.0) -->
+            <section id="tab-communities" class="tab-content animate-fade hidden">
+                <div id="comm-list-view">
+                    <div class="p-4 border-b border-[#2f3336] space-y-3">
+                        <div class="flex items-center justify-between"><h3 class="text-lg font-extrabold text-white">👥 Komunity</h3>
+                        <button type="button" onclick="window.openCommunityEditor()" class="bg-brand text-white font-bold px-4 py-2 rounded-full text-sm cursor-pointer">➕ Založit</button></div>
+                        <div class="flex items-center bg-black border border-[#2f3336] rounded-full px-4 py-2 focus-within:border-brand transition">
+                            <i class="fa-solid fa-magnifying-glass text-[#71767b] mr-2"></i>
+                            <input type="text" id="comm-search" oninput="window.renderCommunities()" placeholder="Hledat komunitu..." class="w-full bg-transparent text-sm text-white focus:outline-none">
+                        </div>
                     </div>
+                    <div id="comm-list" class="divide-y divide-[#2f3336]"></div>
                 </div>
-                </div>
+                <div id="comm-view" class="hidden"></div>
             </section>
 
             <!-- TAB: VERIFICATION -->
@@ -250,7 +294,8 @@
 
             <!-- TAB: PROFILE -->
             <section id="tab-profile" class="tab-content animate-fade hidden">
-                <div class="h-40 bg-gradient-to-r from-brand/20 via-purple-600/20 to-amber-500/20 relative border-b border-[#2f3336]">
+                <div id="profile-cover" class="h-40 bg-gradient-to-r from-brand/20 via-purple-600/20 to-amber-500/20 relative border-b border-[#2f3336]" style="background-size:cover;background-position:center;">
+                    <button onclick="window.openCoverPicker()" title="Titulní fotka" class="absolute right-3 top-3 px-3 py-1.5 rounded-full bg-black/60 border border-[#2f3336] text-white text-xs font-bold cursor-pointer">🖼️ Titulní fotka</button>
                     <img id="profile-banner-avatar" src="" class="w-24 h-24 rounded-full border-4 border-black object-cover absolute -bottom-12 left-4 shadow-2xl">
                     <button onclick="window.openAvatarPicker()" title="Změnit profilovku" class="absolute left-[5.6rem] -bottom-12 w-8 h-8 rounded-full bg-[#16181c] border border-[#2f3336] flex items-center justify-center text-sm cursor-pointer">✏️</button>
                 </div>
@@ -280,14 +325,17 @@
             </section>
         </main>
 
-        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v1.3.b</div>
+        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.0</div>
+        <button id="to-top-btn" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-brand text-white font-bold px-4 py-2 rounded-full shadow-xl text-sm cursor-pointer">⬆️ Nahoru</button>
         <!-- Bottom Nav -->
-        <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-8 py-3 flex justify-between items-center z-40 pb-safe">
-            <button onclick="window.switchTab('home')" class="nav-btn text-brand hover:text-white p-2 text-2xl transition cursor-pointer" data-tab="home"><i class="fa-solid fa-house"></i></button>
-            <button onclick="window.switchTab('messages')" class="nav-btn text-[#71767b] hover:text-white p-2 text-2xl transition cursor-pointer" data-tab="messages"><i class="fa-solid fa-envelope"></i></button>
-            <button onclick="window.switchTab('verify')" class="nav-btn text-[#71767b] hover:text-white p-2 text-2xl transition cursor-pointer" data-tab="verify"><i class="fa-solid fa-certificate"></i></button>
-            <button onclick="window.switchTab('dev')" class="nav-btn text-[#71767b] hover:text-amber-400 p-2 text-2xl transition hidden cursor-pointer" id="nav-dev-li" data-tab="dev"><i class="fa-solid fa-code"></i></button>
-            <button onclick="window.switchTab('profile')" class="nav-btn text-[#71767b] hover:text-white p-2 text-2xl transition cursor-pointer" data-tab="profile"><i class="fa-solid fa-user"></i></button>
+        <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-3 py-3 flex justify-between items-center z-40 pb-safe">
+            <button onclick="window.switchTab('home')" class="nav-btn text-brand hover:text-white p-2 text-xl transition cursor-pointer" data-tab="home" title="Domů"><i class="fa-solid fa-house"></i></button>
+            <button onclick="window.switchTab('search')" class="nav-btn text-[#71767b] hover:text-white p-2 text-xl transition cursor-pointer" data-tab="search" title="Hledat"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <button onclick="window.switchTab('communities')" class="nav-btn text-[#71767b] hover:text-white p-2 text-xl transition cursor-pointer" data-tab="communities" title="Komunity"><i class="fa-solid fa-people-group"></i></button>
+            <button onclick="window.switchTab('messages')" class="nav-btn relative text-[#71767b] hover:text-white p-2 text-xl transition cursor-pointer" data-tab="messages" title="Zprávy"><i class="fa-solid fa-envelope"></i><span id="chat-unread" class="hidden absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-[16px] px-1 flex items-center justify-center"></span></button>
+            <button onclick="window.switchTab('verify')" class="nav-btn text-[#71767b] hover:text-white p-2 text-xl transition cursor-pointer" data-tab="verify" title="Ověření"><i class="fa-solid fa-certificate"></i></button>
+            <button onclick="window.switchTab('dev')" class="nav-btn text-[#71767b] hover:text-amber-400 p-2 text-xl transition hidden cursor-pointer" id="nav-dev-li" data-tab="dev"><i class="fa-solid fa-code"></i></button>
+            <button onclick="window.switchTab('profile')" class="nav-btn text-[#71767b] hover:text-white p-2 text-xl transition cursor-pointer" data-tab="profile" title="Profil"><i class="fa-solid fa-user"></i></button>
         </nav>
     </div>
 
@@ -322,6 +370,16 @@
         </div>
     </div>
 
+    <!-- v2.0 PŘÍBĚH NA CELOU OBRAZOVKU -->
+    <div id="story-viewer" class="fixed inset-0 z-[70] bg-black hidden flex flex-col">
+        <div id="story-bars" class="flex gap-1 p-3"></div>
+        <div class="flex items-center justify-between px-4 pb-2">
+            <div id="story-head" class="flex items-center gap-2 text-white text-sm font-bold"></div>
+            <div class="flex items-center gap-2"><span id="story-del"></span><button type="button" onclick="window.closeStory()" class="text-white text-2xl w-10 h-10 cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
+        </div>
+        <div id="story-body" onclick="window.storyTap(event)" class="relative flex-1 flex items-center justify-center m-3 rounded-3xl overflow-hidden cursor-pointer"></div>
+    </div>
+
     <!-- MODAL: COMMENTS -->
     <div id="comment-modal" class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 hidden">
         <div class="bg-[#16181c] border border-[#2f3336] rounded-3xl p-0 max-w-lg w-full flex flex-col max-h-[85vh] animate-fade shadow-2xl">
@@ -344,14 +402,14 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, linkWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, collection, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, collection, deleteField, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const safeStorage = {
             get: (k) => { try { return localStorage.getItem(k); } catch(e) { return null; } },
             set: (k, v) => { try { localStorage.setItem(k, v); } catch(e) {} }
         };
 
-        window.DB = { posts: [], msgs: [], verifs: [], users: [], comments: [], badges: {}, bios: {}, bans: {}, devs: {}, follows: {}, themes: {}, wallets: {}, avatars: {}, pins: {} };
+        window.DB = { posts: [], msgs: [], verifs: [], users: [], comments: [], badges: {}, bios: {}, bans: {}, devs: {}, follows: {}, themes: {}, wallets: {}, avatars: {}, pins: {}, chats: [], chatMsgs: [], notifs: [], stories: [], communities: [], covers: {} };
 
         // PRECISNI 20-CÍPY ORIGINÁLNÍ X/TWITTER BADGE SVG
         const getOfficialBadgeSVG = (colorClass) => `
@@ -750,8 +808,10 @@
             try {
                 onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'posts'), (s) => {
                     window.DB.posts = s.docs.map(d => { const x = d.data() || {}; return { ...x, id: x.id || d.id, _doc: d.id }; }).sort((a,b) => b.time - a.time);
+                    window.DB._postsLoaded = true;
                     window.triggerUpdate();
-                }, (e)=>{});
+                }, (e)=>{ window.DB._postsLoaded = true; window.triggerUpdate(); });
+                setTimeout(() => { if (!window.DB._postsLoaded) { window.DB._postsLoaded = true; window.triggerUpdate(); } }, 7000);
                 
                 onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'messages'), (s) => {
                     window.DB.msgs = s.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => a.time - b.time);
@@ -783,6 +843,15 @@
                     window.DB.users = s.docs.map(d => ({id: d.id, ...d.data()}));
                     window.triggerUpdate();
                 }, (e)=>{});
+                // v2.0: nový chat, oznámení, příběhy, komunity, titulní fotky
+                [['chats','chats'], ['chatMessages','chatMsgs'], ['notifications','notifs'], ['stories','stories'], ['communities','communities']].forEach(([col, key]) => onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', col), (s) => {
+                    window.DB[key] = s.docs.map(d => ({ ...d.data(), id: d.id })).sort((a,b) => (a.time||0) - (b.time||0));
+                    window.triggerUpdate();
+                }, (e)=>{ console.warn(col, e); }));
+                onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'covers'), (s) => {
+                    const o = {}; s.docs.forEach(d => { o[d.id] = d.data(); }); window.DB.covers = o;
+                    window.triggerUpdate();
+                }, (e)=>{});
             } catch(e){}
 
             setTimeout(window.initBubbleAccount, 1000); 
@@ -806,56 +875,7 @@
             if (window.activePostForComments) window.renderCommentsList();
         };
 
-        window.renderPosts = () => {
-            const container = document.getElementById('posts-feed');
-            let posts = window.DB.posts || [];
-            const myFollows = window.getDict('follows')[window.currentUser.handle] || [];
-            if (window.activeFeedFilter === 'following') posts = posts.filter(p => p.authorHandle === window.currentUser.handle || myFollows.includes(p.authorHandle));
-            
-            if (posts.length === 0) { container.innerHTML = `<div class="p-10 text-center text-[#71767b] text-sm font-medium">Zatím žádné příspěvky.</div>`; return; }
-
-            const badges = window.getDict('badges');
-            const comments = window.DB.comments || [];
-
-            container.innerHTML = posts.map(p => {
-                const isLiked = (p.likes || []).includes(window.currentUser.handle);
-                const isFollowed = myFollows.includes(p.authorHandle);
-                const cCount = comments.filter(c => c.postId === p.id).length;
-                return `
-                <div class="p-4 sm:p-5 flex gap-3 hover:bg-[#16181c]/30 transition border-b border-[#2f3336] last:border-0">
-                    <img src="${window.getAvatar(p.authorHandle, p.authorAvatar)}" onclick="window.openUserProfile('${window.escHtml(p.authorHandle)}')" class="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-[#2f3336] cursor-pointer">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-1 text-sm font-bold text-white truncate">
-                                <span class="truncate">${p.authorName || 'Neznámý'}</span> ${window.getBadgeIcon(badges[p.authorHandle])}
-                                <span class="text-[#71767b] font-normal ml-1 truncate">@${p.authorHandle}</span><span class="text-[#71767b] font-normal text-xs whitespace-nowrap">· ${window.relTime(p.time)}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                ${p.authorHandle !== window.currentUser.handle ? `
-                                <button onclick="window.toggleFollow('${p.authorHandle}')" class="text-xs px-3 py-1 rounded-full border ${isFollowed ? 'border-[#2f3336] text-[#71767b]' : 'border-white text-black bg-white'} font-bold transition cursor-pointer">
-                                    ${isFollowed ? 'Sledováno' : 'Sledovat'}
-                                </button>` : ''}
-                                ${p.authorHandle === window.currentUser.handle ? `<button onclick="window.pinPost('${p.id}')" title="Připnout na profil" class="text-sm px-1 cursor-pointer">${(window.DB.pins||{})[window.currentUser.handle] && window.DB.pins[window.currentUser.handle].postId === p.id ? '📌' : '📍'}</button>` : ''}${(p.authorHandle === window.currentUser.handle || window.checkIsOwner(window.currentUser)) ? `<button onclick="window.deletePost('${p.id}')" class="text-[#71767b] hover:text-red-500 transition text-sm px-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>` : ''}
-                            </div>
-                        </div>
-                        <p class="text-[15px] text-[#e7e9ea] mt-1.5 whitespace-pre-wrap leading-relaxed">${window.renderPostText(p)}</p>
-                        ${window.renderPoll(p)}
-                        ${p.imageUrl ? `<img src="${p.imageUrl}" class="mt-3 rounded-2xl w-full object-cover max-h-96 border border-[#2f3336]" onerror="this.style.display='none'">` : ''}
-                        <div class="flex gap-8 mt-3.5 text-[#71767b] text-[13px] items-center font-semibold">
-                            <button onclick="window.openComments('${p.id}')" class="flex items-center gap-2 hover:text-brand transition group cursor-pointer">
-                                <div class="w-8 h-8 rounded-full group-hover:bg-brand/10 flex items-center justify-center -ml-2 transition"><i class="fa-solid fa-comment"></i></div>
-                                <span class="-ml-1">${cCount}</span>
-                            </button>
-                            <button onclick="window.toggleLike('${p.id}')" class="flex items-center gap-2 hover:text-pink-500 transition group ${isLiked?'text-pink-500':''} cursor-pointer">
-                                <div class="w-8 h-8 rounded-full group-hover:bg-pink-500/10 flex items-center justify-center -ml-2 transition"><i class="fa-solid fa-heart ${isLiked?'text-pink-500':''}"></i></div>
-                                <span class="-ml-1 underline decoration-dotted" onclick="event.stopPropagation();window.showLikers('${p.id}')">${(p.likes||[]).length + (p.boostLikes||0)}</span>
-                            </button>
-                            <button onclick="window.boostPost('${p.id}')" ${(p.boostLikes||0) >= 50 ? 'disabled' : ''} class="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border ${(p.boostLikes||0) >= 50 ? 'border-[#2f3336] text-[#71767b] opacity-60' : 'border-amber-400/60 text-amber-400 hover:bg-amber-400/10'} cursor-pointer">${(p.boostLikes||0) >= 50 ? 'Max boost' : '🚀 Boost · 15 🪙'}</button>
-                        </div>
-                    </div>
-                </div>`;
-            }).join('');
-        };
+        // renderPosts -> v2.0 blok níže
 
         window.toggleFollow = async (targetHandle) => {
             let f = window.getDict('follows'), myF = f[window.currentUser.handle] || [];
@@ -992,46 +1012,7 @@
             }
         };
 
-        // v1.2.j odpočet do znovuotevření chatu (sobota 2026-11-07 10:00 Praha)
-        window.CHAT_OPEN_AT = Date.parse('2026-11-07T09:00:00Z');
-        window.tickChatCountdown = () => {
-            const el = document.getElementById('chat-countdown'); if (!el) return;
-            let ms = window.CHAT_OPEN_AT - Date.now();
-            if (ms <= 0) { el.textContent = 'Už brzy! 🚀'; return; }
-            const h = Math.floor(ms / 3600000), m = Math.floor(ms % 3600000 / 60000), sec = Math.floor(ms % 60000 / 1000);
-            el.textContent = `${h}h ${String(m).padStart(2,'0')}m ${String(sec).padStart(2,'0')}s`;
-        };
-        setInterval(window.tickChatCountdown, 1000); window.tickChatCountdown();
-
-        window.renderMessages = () => {
-            const container = document.getElementById('messages-container'), r = document.getElementById('dm-recipient').value.trim().replace('@', '');
-            if (!r) { container.innerHTML = `<div class="text-center text-[#71767b] py-10 text-sm font-medium">Zadejte komu chcete napsat.</div>`; return; }
-            const chat = (window.DB.msgs || []).filter(m => (m.sender === window.currentUser.handle && m.recipient === r) || (m.sender === r && m.recipient === window.currentUser.handle));
-            if (chat.length === 0) { container.innerHTML = `<div class="text-center text-[#71767b] py-10 text-sm font-medium">Napište první zprávu.</div>`; return; }
-            container.innerHTML = chat.map(m => {
-                const isMe = m.sender === window.currentUser.handle;
-                return `
-                <div class="flex ${isMe ? 'justify-end' : 'justify-start'} animate-fade">
-                    <div class="max-w-[80%] px-4 py-2.5 rounded-2xl text-[15px] shadow-sm ${isMe ? 'bg-brand text-white rounded-br-sm' : 'bg-[#16181c] text-[#e7e9ea] border border-[#2f3336] rounded-bl-sm'}">${m.text}</div>
-                </div>`;
-            }).join('');
-        };
-
-        window.submitMessage = async () => { if (Date.now() < window.CHAT_OPEN_AT) { window.showToast("Chat se renovuje, otevře se zítra v 10:00 🚧", true); return; }
-            if (window.checkBanStatus(window.currentUser.handle)) return;
-            const t = document.getElementById('dm-input').value.trim(), r = document.getElementById('dm-recipient').value.trim().replace('@', '');
-            if (!t || !r) return;
-            
-            const newMsg = { sender: window.currentUser.handle, recipient: r, text: t, time: Date.now() };
-            window.DB.msgs = window.DB.msgs || [];
-            window.DB.msgs.push(newMsg);
-            document.getElementById('dm-input').value = '';
-            window.triggerUpdate(); // Okamžitá reakce UI
-
-            if(window.db) {
-                try { await setDoc(doc(collection(window.db, 'artifacts', appId, 'public', 'data', 'messages')), newMsg); } catch(e) {}
-            }
-        };
+        // v2.0: starý zamčený chat odstraněn, nový chat je v bloku v2.0 níže (stará kolekce messages zůstává jako archiv)
 
         window.renderVerificationUI = () => {
             const box = document.getElementById('verify-status-box');
@@ -1208,7 +1189,7 @@
             neon:    { name: 'Neon', sw: 'linear-gradient(135deg,#0a0014,#ff2bd6)' },
             lava:    { name: 'Láva', sw: 'linear-gradient(135deg,#2a0500,#ff5a1f)' }
         };
-        window.hasGold = (h) => { const b = window.getDict('badges')[h]; return (h === 'Flex' && window.isOwnerSession === true) || (!!b && b !== 'blue'); };
+        window.hasGold = (h) => { const b = window.getDict('badges')[h]; return (!!b && b !== 'blue'); }; // v2.0: i vlastník musí mít nemodrý odznak (Viktor 2026-11-07)
         window.myUid = () => (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid : 'local';
         window.getMyTheme = (h) => {
             const e = window.getDict('themes')[h];
@@ -1288,29 +1269,7 @@
             c.style.fontWeight = n > 280 ? '700' : '400';
         };
 
-        window.submitPost = async () => {
-            if (window.checkBanStatus(window.currentUser.handle)) return;
-            const t = document.getElementById('post-text').value.trim();
-            const i = document.getElementById('post-image').value.trim();
-            if (!t && !i) return;
-            if (t.length > 280) { window.showToast('Post je moc dlouhý (max 280 znaků).', true); return; }
-            
-            const newPost = { id: `p_${Date.now()}`, authorName: window.currentUser.fullname, authorHandle: window.currentUser.handle, authorAvatar: window.currentUser.avatar, text: t, imageUrl: i, time: Date.now(), likes: [] };
-            const _po = [1,2,3,4].map(n => (document.getElementById('poll-o'+n).value || '').trim().slice(0,40)).filter(Boolean);
-            if (_po.length >= 2) { newPost.poll = _po; newPost.pollVotes = {}; }
-            else if (_po.length === 1) { window.showToast('Anketa potřebuje aspoň 2 možnosti.', true); return; }
-            [1,2,3,4].forEach(n => { document.getElementById('poll-o'+n).value = ''; }); document.getElementById('poll-box').classList.add('hidden');
-            window.DB.posts.unshift(newPost);
-            
-            document.getElementById('post-text').value = ''; document.getElementById('post-image').value = ''; window.updateCharCount();
-            document.getElementById('post-image').classList.add('hidden');
-            window.showToast('Publikováno');
-            window.triggerUpdate(); // Okamžitá reakce UI
-
-            if(window.db) {
-                try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'posts', newPost.id), newPost); } catch(e) { console.error(e); window.showToast('Post se neuložil do cloudu.', true); }
-            }
-        };
+        // submitPost -> v2.0 blok níže
 
 
         // ===== v1.3.b: čas, profilovky, ankety, coiny, boost, lajky, připnutí, zmínky =====
@@ -1354,7 +1313,7 @@
             const pin = (window.DB.pins || {})[h];
             const p = pin && (window.DB.posts || []).find(x => x.id === pin.postId && x.authorHandle === h);
             if (!p) return '';
-            return `<div class="bg-[#16181c] border border-[#2f3336] rounded-2xl p-4"><div class="text-xs text-[#71767b] font-bold mb-1">📌 Připnutý post</div><div class="text-sm text-[#e7e9ea] whitespace-pre-wrap">${window.renderMention({ text: p.text, censored: p.censored }.text)}</div>${p.poll ? '<div class="text-xs text-[#71767b] mt-1">📊 Anketa</div>' : ''}</div>`;
+            return `<div class="bg-[#16181c] border border-[#2f3336] rounded-2xl p-4"><div class="text-xs text-[#71767b] font-bold mb-1">📌 Připnutý post</div><div class="text-sm text-[#e7e9ea] whitespace-pre-wrap">${window.renderMention(window.plainText(p))}</div>${p.poll ? '<div class="text-xs text-[#71767b] mt-1">📊 Anketa</div>' : ''}</div>`;
         };
         window.pinPost = async (id) => {
             const h = window.currentUser.handle;
@@ -1482,6 +1441,739 @@
             const nt = w ? (w.t || now) + Math.floor(Math.max(0, now - (w.t || now)) / COIN_STEP) * COIN_STEP : now;
             await window.saveWallet(target, base + n, nt);
             window.showToast(`Dáno ${n} 🪙 uživateli @${target}`);
+        };
+
+        // ======================================================================
+        // ========================= FLEX v2.0 ==================================
+        // ======================================================================
+        const dref = (col, id) => doc(window.db, 'artifacts', appId, 'public', 'data', col, id);
+        const cref = (col) => collection(window.db, 'artifacts', appId, 'public', 'data', col);
+        const esc = (v) => window.escHtml(v);
+        const jsq = (v) => window.escHtml(JSON.stringify(String(v == null ? '' : v)));
+        window.jsq = jsq;
+        window.me = () => window.currentUser ? window.currentUser.handle : '';
+        window.findUser = (h) => (window.DB.users || []).find(x => String(x.handle).toLowerCase() === String(h).toLowerCase());
+        window.avatarOf = (h) => { const u = window.findUser(h); return window.getAvatar(h, (u && u.avatar) || ('https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(h))); };
+        window.ensureAuth = async () => { if (window.auth && !window.auth.currentUser) { try { await signInAnonymously(window.auth); } catch(e) {} } };
+        window.isBanned = (h) => { const e = window.getDict('bans')[h]; return !!(e && e > Date.now()); };
+        window.plainText = (p) => { const c = new Set((p && p.censored) || []); let wi = 0; return String((p && p.text) || '').split(/(\s+)/).map(x => (x === '' || /^\s+$/.test(x)) ? x : (c.has(wi++) ? '██' : x)).join(''); };
+
+        // ---------- 2 nové styly appky ----------
+        window.THEMES.aurora = { name: 'Polární záře', sw: 'linear-gradient(135deg,#03111a,#3ef0b0 55%,#a35cff)' };
+        window.THEMES.candy  = { name: 'Cukrová vata', sw: 'linear-gradient(135deg,#ffd1e8,#cfe3ff 55%,#fff1b8)' };
+
+        // ---------- Emoji výběr ----------
+        window.FAV_EMOJI = ['😀','😂','😍','🥳','😎','🔥','👍','❤️','🎉','🚀'];
+        window.toggleEmojiRow = (rowId, inputId) => {
+            const row = document.getElementById(rowId); if (!row) return;
+            if (!row.dataset.ready) {
+                row.innerHTML = window.FAV_EMOJI.map(e => `<button type="button" data-e="${e}" class="text-xl w-9 h-9 rounded-full hover:bg-brand/10 cursor-pointer">${e}</button>`).join('');
+                row.dataset.ready = '1';
+                row.addEventListener('click', (ev) => {
+                    const b = ev.target.closest('button[data-e]'); if (!b) return;
+                    const inp = document.getElementById(inputId); if (!inp) return;
+                    const st = (inp.selectionStart == null) ? inp.value.length : inp.selectionStart;
+                    const en = (inp.selectionEnd == null) ? inp.value.length : inp.selectionEnd;
+                    inp.value = inp.value.slice(0, st) + b.dataset.e + inp.value.slice(en);
+                    inp.focus(); try { inp.selectionStart = inp.selectionEnd = st + b.dataset.e.length; } catch(e) {}
+                    inp.dispatchEvent(new Event('input'));
+                });
+            }
+            row.classList.toggle('hidden');
+        };
+
+        // ---------- Koncepty (automaticky uložený rozepsaný post) ----------
+        window.draftKey = () => 'flex_draft_' + window.me();
+        window.clearDraft = () => { if (window.currentUser) safeStorage.set(window.draftKey(), ''); const n = document.getElementById('draft-note'); if (n) n.classList.add('hidden'); };
+        window.restoreDraft = () => {
+            const ta = document.getElementById('post-text'); if (!ta || ta.value) return;
+            const d = safeStorage.get(window.draftKey()) || '';
+            if (d) { ta.value = d; window.updateCharCount(); const n = document.getElementById('draft-note'); if (n) n.classList.remove('hidden'); }
+        };
+        (() => {
+            const ta = document.getElementById('post-text'); if (!ta) return; let tm;
+            ta.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(() => {
+                if (!window.currentUser) return;
+                safeStorage.set(window.draftKey(), ta.value);
+                const n = document.getElementById('draft-note'); if (n) n.classList.toggle('hidden', !ta.value.trim());
+            }, 500); });
+        })();
+
+        // ---------- Oznámení 🔔 ----------
+        window.notify = async (to, type, extra = {}) => {
+            try {
+                const from = window.me(); if (!to || !from || to === from || !window.db) return;
+                await setDoc(doc(cref('notifications')), { to, from, fromName: (window.currentUser && window.currentUser.fullname) || from, type, time: Date.now(), ...extra });
+            } catch(e) { console.warn('notify', e); }
+        };
+        window.notifyMentions = (t, postId) => {
+            const hs = new Set([...String(t || '').matchAll(/@([A-Za-z0-9_]{1,30})/g)].map(m => m[1].toLowerCase()));
+            hs.forEach(h => { const u = window.findUser(h); if (u) window.notify(u.handle, 'mention', { postId }); });
+        };
+        window.NOTIF_TXT = { like: 'dal(a) like tvému postu ❤️', comment: 'okomentoval(a) tvůj post 💬', mention: 'tě zmínil(a) 📣', follow: 'tě začal(a) sledovat 👤', repost: 'repostnul(a) tvůj post 🔁', quote: 'citoval(a) tvůj post 💭', community: 'se přidal(a) do tvé komunity 👥' };
+        window.notifSeenKey = () => 'flex_notif_seen_' + window.me();
+        window.myNotifs = () => { const since = Date.now() - 14 * 86400000; return (window.DB.notifs || []).filter(n => n.to === window.me() && (n.time || 0) > since).sort((a,b) => b.time - a.time).slice(0, 60); };
+        window.renderBell = () => {
+            const el = document.getElementById('bell-count'); if (!el || !window.currentUser) return;
+            const seen = parseInt(safeStorage.get(window.notifSeenKey()) || '0', 10) || 0;
+            const n = window.myNotifs().filter(x => x.time > seen).length;
+            el.textContent = n > 9 ? '9+' : String(n); el.classList.toggle('hidden', n === 0);
+        };
+        window.openNotifs = () => {
+            const list = window.myNotifs();
+            const seen = parseInt(safeStorage.get(window.notifSeenKey()) || '0', 10) || 0;
+            safeStorage.set(window.notifSeenKey(), String(Date.now()));
+            const rows = list.map(n => {
+                const p = n.postId ? (window.DB.posts || []).find(x => x.id === n.postId) : null;
+                const sn = p && p.text ? window.plainText(p) : (n.text || '');
+                return `<div onclick="window.closeGen();window.openUserProfile(${jsq(n.from)})" class="flex gap-3 py-2.5 items-start cursor-pointer ${n.time > seen ? 'bg-brand/10 -mx-2 px-2 rounded-xl' : ''}"><img src="${esc(window.avatarOf(n.from))}" class="w-9 h-9 rounded-full object-cover flex-shrink-0"><div class="min-w-0 flex-1"><div class="text-sm text-white"><b>${esc(n.fromName || n.from)}</b> ${window.NOTIF_TXT[n.type] || ''}</div>${sn ? `<div class="text-xs text-[#71767b] truncate">${esc(String(sn).slice(0, 70))}</div>` : ''}<div class="text-[11px] text-[#71767b]">${window.relTime(n.time)}</div></div></div>`;
+            }).join('');
+            window.openGen('🔔 Oznámení', rows || '<div class="text-sm text-[#71767b] py-6 text-center">Zatím žádná oznámení. 🙂</div>');
+            window.renderBell();
+        };
+
+        // ---------- #hashtagy + Trendy ----------
+        window.tagsOf = (t) => [...new Set([...String(t || '').matchAll(/#([\p{L}\p{N}_]{1,40})/gu)].map(m => m[1].toLowerCase()))];
+        window.openTag = (tag) => { window.closeGen(); window.switchTab('search'); const i = document.getElementById('search-input'); if (i) i.value = '#' + tag; window.renderSearch(); window.scrollTo(0, 0); };
+        const _fmtWord = window.fmtWord;
+        window.fmtWord = (part) => {
+            const m = /^#([\p{L}\p{N}_]{1,40})(.*)$/su.exec(part);
+            if (m) return `<span onclick="event.stopPropagation();window.openTag(${jsq(m[1])})" class="text-brand font-bold cursor-pointer hover:underline">#${esc(m[1])}</span>${esc(m[2])}`;
+            return _fmtWord(part);
+        };
+        window.publicPosts = () => (window.DB.posts || []).filter(p => !p.communityId && !p.repostOf);
+        window.trends = () => {
+            const since = Date.now() - 86400000, cnt = {};
+            window.publicPosts().filter(p => (p.time || 0) > since).forEach(p => window.tagsOf(window.plainText(p)).forEach(t => { cnt[t] = (cnt[t] || 0) + 1; }));
+            return Object.entries(cnt).sort((a,b) => b[1] - a[1]).slice(0, 8);
+        };
+
+        // ---------- Karta postu (repost, citace, animované srdíčko) ----------
+        window.HEART_POP = { id: null, t: 0 };
+        window.embedHtml = (o) => {
+            if (!o) return `<div class="mt-3 rounded-2xl border border-[#2f3336] p-3 text-sm text-[#71767b]">Původní post byl smazán 🗑️</div>`;
+            return `<div onclick="event.stopPropagation();window.openComments(${jsq(o.id)})" class="mt-3 rounded-2xl border border-[#2f3336] p-3 cursor-pointer hover:bg-[#16181c]/40"><div class="flex items-center gap-1.5 text-sm min-w-0"><img src="${esc(window.getAvatar(o.authorHandle, o.authorAvatar))}" class="w-5 h-5 rounded-full object-cover"><b class="text-white truncate">${esc(o.authorName || 'Neznámý')}</b>${window.getBadgeIcon(window.getDict('badges')[o.authorHandle])}<span class="text-[#71767b] truncate">@${esc(o.authorHandle)} · ${window.relTime(o.time)}</span></div><p class="text-sm text-[#e7e9ea] mt-1 whitespace-pre-wrap">${window.renderMention(window.plainText(o))}</p>${o.imageUrl ? `<img src="${esc(o.imageUrl)}" class="mt-2 rounded-xl w-full object-cover max-h-60" onerror="this.style.display='none'">` : ''}</div>`;
+        };
+        window.postCardHtml = (p, opt = {}) => {
+            const me = window.me();
+            const myFollows = window.getDict('follows')[me] || [];
+            const badges = window.getDict('badges');
+            const isLiked = (p.likes || []).includes(me);
+            const isFollowed = myFollows.includes(p.authorHandle);
+            const cCount = (window.DB.comments || []).filter(c => c.postId === p.id).length;
+            const shares = (window.DB.posts || []).filter(x => x.repostOf === p.id || x.quoteOf === p.id);
+            const iRe = shares.some(x => x.repostOf === p.id && x.authorHandle === me);
+            const pid = jsq(p.id), ah = jsq(p.authorHandle);
+            const pop = window.HEART_POP.id === p.id && Date.now() - window.HEART_POP.t < 900;
+            const quoted = p.quoteOf ? window.embedHtml((window.DB.posts || []).find(x => x.id === p.quoteOf)) : '';
+            const pinOn = (window.DB.pins || {})[me] && window.DB.pins[me].postId === p.id;
+            const rb = opt.repostBy;
+            const head = rb ? `<div class="text-xs text-[#71767b] font-bold mb-1.5 pl-[3.25rem] flex items-center gap-2">🔁 ${rb.authorHandle === me ? 'Repostnul(a) jsi' : esc(rb.authorName || rb.authorHandle) + ' repostnul(a)'}${rb.authorHandle === me ? ` <button onclick="window.repostPost(${pid})" class="text-red-400 hover:underline cursor-pointer">zrušit</button>` : ''}</div>` : '';
+            return `
+                <div class="p-4 sm:p-5 hover:bg-[#16181c]/30 transition border-b border-[#2f3336] last:border-0">${head}<div class="flex gap-3">
+                    <img src="${esc(window.getAvatar(p.authorHandle, p.authorAvatar))}" onclick="window.openUserProfile(${ah})" class="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-[#2f3336] cursor-pointer">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-1 text-sm font-bold text-white min-w-0 flex-1 overflow-hidden">
+                                <span class="truncate min-w-[2.5rem] cursor-pointer" onclick="window.openUserProfile(${ah})">${esc(p.authorName || 'Neznámý')}</span> ${window.getBadgeIcon(badges[p.authorHandle])}
+                                <span class="text-[#71767b] font-normal ml-1 truncate">@${esc(p.authorHandle)}</span><span class="text-[#71767b] font-normal text-xs whitespace-nowrap">· ${window.relTime(p.time)}</span>
+                            </div>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                ${p.authorHandle !== me ? `
+                                <button onclick="window.toggleFollow(${ah})" class="text-xs px-3 py-1 rounded-full border whitespace-nowrap ${isFollowed ? 'border-[#2f3336] text-[#71767b]' : 'border-white text-black bg-white'} font-bold transition cursor-pointer">
+                                    ${isFollowed ? 'Sledováno' : 'Sledovat'}
+                                </button>` : ''}
+                                ${p.authorHandle === me ? `<button onclick="window.pinPost(${pid})" title="Připnout na profil" class="text-sm px-1 cursor-pointer">${pinOn ? '📌' : '📍'}</button>` : ''}${(p.authorHandle === me || window.checkIsOwner(window.currentUser)) ? `<button onclick="window.deletePost(${pid})" class="text-[#71767b] hover:text-red-500 transition text-sm px-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>` : ''}
+                            </div>
+                        </div>
+                        <p class="text-[15px] text-[#e7e9ea] mt-1.5 whitespace-pre-wrap leading-relaxed">${window.renderPostText(p)}</p>
+                        ${window.renderPoll(p)}
+                        ${p.imageUrl ? `<img src="${esc(p.imageUrl)}" class="mt-3 rounded-2xl w-full object-cover max-h-96 border border-[#2f3336]" onerror="this.style.display='none'">` : ''}
+                        ${quoted}
+                        <div class="flex gap-6 mt-3.5 text-[#71767b] text-[13px] items-center font-semibold flex-wrap">
+                            <button onclick="window.openComments(${pid})" class="flex items-center gap-2 hover:text-brand transition group cursor-pointer">
+                                <div class="w-8 h-8 rounded-full group-hover:bg-brand/10 flex items-center justify-center -ml-2 transition"><i class="fa-solid fa-comment"></i></div>
+                                <span class="-ml-1">${cCount}</span>
+                            </button>
+                            <button onclick="window.openRepostMenu(${pid})" class="flex items-center gap-2 hover:text-emerald-400 transition group ${iRe ? 'text-emerald-400' : ''} cursor-pointer" title="Repost / citace">
+                                <div class="w-8 h-8 rounded-full group-hover:bg-emerald-400/10 flex items-center justify-center -ml-2 transition"><i class="fa-solid fa-retweet"></i></div>
+                                <span class="-ml-1">${shares.length}</span>
+                            </button>
+                            <button onclick="window.toggleLike(${pid})" class="flex items-center gap-2 hover:text-pink-500 transition group ${isLiked?'text-pink-500':''} cursor-pointer">
+                                <div class="w-8 h-8 rounded-full group-hover:bg-pink-500/10 flex items-center justify-center -ml-2 transition"><i class="fa-solid fa-heart ${isLiked?'text-pink-500':''} ${pop?'heart-pop':''}"></i></div>
+                                <span class="-ml-1 underline decoration-dotted" onclick="event.stopPropagation();window.showLikers(${pid})">${(p.likes||[]).length + (p.boostLikes||0)}</span>
+                            </button>
+                            <button onclick="window.boostPost(${pid})" ${(p.boostLikes||0) >= 50 ? 'disabled' : ''} class="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border ${(p.boostLikes||0) >= 50 ? 'border-[#2f3336] text-[#71767b] opacity-60' : 'border-amber-400/60 text-amber-400 hover:bg-amber-400/10'} cursor-pointer">${(p.boostLikes||0) >= 50 ? 'Max boost' : '🚀 Boost · 15 🪙'}</button>
+                        </div>
+                    </div>
+                </div></div>`;
+        };
+        window.skeletonHtml = () => Array.from({ length: 4 }).map(() => `<div class="p-4 flex gap-3 border-b border-[#2f3336]"><div class="skel w-10 h-10 rounded-full flex-shrink-0"></div><div class="flex-1 space-y-2"><div class="skel h-3 w-1/3"></div><div class="skel h-3 w-full"></div><div class="skel h-3 w-2/3"></div></div></div>`).join('');
+        window.renderPosts = () => {
+            const container = document.getElementById('posts-feed'); if (!container || !window.currentUser) return;
+            if (window.db && !window.DB._postsLoaded) { container.innerHTML = window.skeletonHtml(); return; }
+            const me = window.me();
+            const myFollows = window.getDict('follows')[me] || [];
+            const all = window.DB.posts || [];
+            let posts = all.filter(p => !p.communityId);
+            if (window.activeFeedFilter === 'following') posts = posts.filter(p => p.authorHandle === me || myFollows.includes(p.authorHandle));
+            const items = [], seenRe = new Set();
+            posts.forEach(p => {
+                if (p.repostOf) {
+                    const o = all.find(x => x.id === p.repostOf);
+                    if (!o || o.communityId || seenRe.has(o.id)) return;
+                    seenRe.add(o.id); items.push(window.postCardHtml(o, { repostBy: p }));
+                } else items.push(window.postCardHtml(p));
+            });
+            if (!items.length) { container.innerHTML = `<div class="p-12 text-center"><div class="text-6xl mb-3">🫧</div><div class="text-white font-bold text-lg">Tady je zatím ticho</div><div class="text-[#71767b] text-sm mt-1">${window.activeFeedFilter === 'following' ? 'Začni někoho sledovat, ať tu vidíš jeho posty 👀' : 'Napiš první post a rozjeď to! ✍️'}</div></div>`; return; }
+            container.innerHTML = items.join('');
+        };
+
+        // ---------- Ukládání postů ----------
+        window.savePost = async (np) => {
+            window.DB.posts.unshift({ ...np, _doc: np.id });
+            window.triggerUpdate();
+            if (window.db) { try { await setDoc(dref('posts', np.id), np); } catch(e) { console.error(e); window.showToast('Post se neuložil do cloudu.', true); return false; } }
+            return true;
+        };
+        window.newPostBase = () => ({ id: `p_${Date.now()}`, authorName: window.currentUser.fullname, authorHandle: window.currentUser.handle, authorAvatar: window.currentUser.avatar, text: '', imageUrl: '', time: Date.now(), likes: [] });
+        window.submitPost = async () => {
+            if (window.checkBanStatus(window.currentUser.handle)) return;
+            const t = document.getElementById('post-text').value.trim();
+            const i = document.getElementById('post-image').value.trim();
+            if (!t && !i) return;
+            if (t.length > 280) { window.showToast('Post je moc dlouhý (max 280 znaků).', true); return; }
+            const newPost = { ...window.newPostBase(), text: t, imageUrl: i };
+            const _po = [1,2,3,4].map(n => (document.getElementById('poll-o'+n).value || '').trim().slice(0,40)).filter(Boolean);
+            if (_po.length >= 2) { newPost.poll = _po; newPost.pollVotes = {}; }
+            else if (_po.length === 1) { window.showToast('Anketa potřebuje aspoň 2 možnosti.', true); return; }
+            [1,2,3,4].forEach(n => { document.getElementById('poll-o'+n).value = ''; }); document.getElementById('poll-box').classList.add('hidden');
+            document.getElementById('post-text').value = ''; document.getElementById('post-image').value = ''; window.updateCharCount();
+            document.getElementById('post-image').classList.add('hidden');
+            document.getElementById('emoji-row').classList.add('hidden');
+            window.clearDraft();
+            window.showToast('Publikováno');
+            await window.savePost(newPost);
+            window.notifyMentions(t, newPost.id);
+        };
+
+        // ---------- Repost 🔁 a citace 💭 ----------
+        window.openRepostMenu = (id) => {
+            const o = (window.DB.posts || []).find(x => x.id === id); if (!o) return;
+            if (o.communityId) return window.showToast('Posty z komunity se nedají sdílet ven 👥', true);
+            const iRe = (window.DB.posts || []).some(x => x.repostOf === id && x.authorHandle === window.me());
+            window.openGen('🔁 Sdílet post', `<div class="space-y-2"><button type="button" onclick="window.closeGen();window.repostPost(${jsq(id)})" class="w-full py-3 rounded-xl bg-[#2f3336] text-white font-bold cursor-pointer">🔁 ${iRe ? 'Zrušit repost' : 'Repostnout'}</button><button type="button" onclick="window.openQuote(${jsq(id)})" class="w-full py-3 rounded-xl bg-brand text-white font-bold cursor-pointer">💭 Citovat s komentářem</button></div>`);
+        };
+        window.repostPost = async (id) => {
+            if (window.checkBanStatus(window.me())) return;
+            const o = (window.DB.posts || []).find(x => x.id === id); if (!o || o.communityId) return;
+            const mine = (window.DB.posts || []).find(x => x.repostOf === id && x.authorHandle === window.me());
+            if (mine) {
+                window.DB.posts = window.DB.posts.filter(x => x !== mine); window.triggerUpdate();
+                if (window.db && mine._doc) { try { await window.ensureAuth(); await deleteDoc(dref('posts', mine._doc)); } catch(e) { console.warn(e); window.showToast('Repost se nepodařilo zrušit.', true); return; } }
+                window.showToast('Repost zrušen'); return;
+            }
+            const np = { ...window.newPostBase(), repostOf: id };
+            if (await window.savePost(np)) { window.notify(o.authorHandle, 'repost', { postId: id }); window.showToast('Repostnuto 🔁'); }
+        };
+        window.openQuote = (id) => {
+            const o = (window.DB.posts || []).find(x => x.id === id);
+            window.openGen('💭 Citovat post', `<textarea id="quote-text" rows="3" maxlength="280" placeholder="Přidej svůj komentář..." class="w-full bg-black border border-[#2f3336] rounded-xl p-3 text-sm text-white focus:outline-none focus:border-brand resize-none"></textarea>${window.embedHtml(o)}<button type="button" onclick="window.submitQuote(${jsq(id)})" class="mt-3 w-full py-2.5 rounded-full bg-brand text-white font-bold cursor-pointer">Publikovat citaci</button>`);
+        };
+        window.submitQuote = async (id) => {
+            if (window.checkBanStatus(window.me())) return;
+            const t = (document.getElementById('quote-text').value || '').trim();
+            if (!t) return window.showToast('Napiš komentář k citaci.', true);
+            if (t.length > 280) return window.showToast('Max 280 znaků.', true);
+            const o = (window.DB.posts || []).find(x => x.id === id);
+            window.closeGen();
+            const np = { ...window.newPostBase(), text: t, quoteOf: id };
+            if (await window.savePost(np)) {
+                if (o) window.notify(o.authorHandle, 'quote', { postId: np.id });
+                window.notifyMentions(t, np.id);
+                window.showToast('Citace publikována 💭');
+            }
+        };
+
+        // ---------- lajk (srdíčko + oznámení), komentář, sledování ----------
+        const _toggleLike = window.toggleLike;
+        window.toggleLike = async (postId) => {
+            const p = (window.DB.posts || []).find(x => x.id === postId);
+            const was = !!(p && (p.likes || []).includes(window.me()));
+            if (p && !was) window.HEART_POP = { id: postId, t: Date.now() };
+            await _toggleLike(postId);
+            if (p && !was) window.notify(p.authorHandle, 'like', { postId });
+        };
+        const _submitComment = window.submitComment;
+        window.submitComment = async () => {
+            const pid = window.activePostForComments;
+            const t = (document.getElementById('comment-input').value || '').trim();
+            const p = (window.DB.posts || []).find(x => x.id === pid);
+            const banned = window.currentUser && window.isBanned(window.me());
+            await _submitComment();
+            if (pid && t && p && !banned) { window.notify(p.authorHandle, 'comment', { postId: pid, text: t.slice(0, 80) }); window.notifyMentions(t, pid); }
+        };
+        const _toggleFollow = window.toggleFollow;
+        window.toggleFollow = async (h) => {
+            const was = (window.getDict('follows')[window.me()] || []).includes(h);
+            await _toggleFollow(h);
+            if (!was) window.notify(h, 'follow');
+        };
+
+        // ---------- Hledání 🔍 ----------
+        window.userRowHtml = (u) => `<div onclick="window.openUserProfile(${jsq(u.handle)})" class="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-[#16181c]/50"><img src="${esc(window.avatarOf(u.handle))}" class="w-10 h-10 rounded-full object-cover"><div class="min-w-0"><div class="text-sm font-bold text-white flex items-center gap-1 truncate">${esc(u.fullname || u.handle)} ${window.getBadgeIcon(window.getDict('badges')[u.handle])}</div><div class="text-xs text-[#71767b]">@${esc(u.handle)}</div></div></div>`;
+        window.renderSearch = () => {
+            const box = document.getElementById('search-results'); if (!box || !window.currentUser) return;
+            const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
+            if (!q) {
+                const tr = window.trends();
+                box.innerHTML = `<div class="p-4"><h3 class="text-lg font-extrabold text-white mb-3">🔥 Trendy (24 h)</h3>${tr.length ? tr.map(([t, n], i) => `<div onclick="window.openTag(${jsq(t)})" class="flex items-center justify-between py-3 px-2 border-b border-[#2f3336] cursor-pointer hover:bg-[#16181c]/50 rounded-xl"><div><div class="text-xs text-[#71767b]">${i + 1} · Trendy</div><div class="font-bold text-white">#${esc(t)}</div></div><div class="text-xs text-[#71767b]">${n} ${n === 1 ? 'post' : (n < 5 ? 'posty' : 'postů')}</div></div>`).join('') : '<div class="text-sm text-[#71767b]">Zatím žádné #hashtagy za posledních 24 h. Napiš post s #něčím! ✨</div>'}</div>`;
+                return;
+            }
+            const isTag = q.startsWith('#') && q.length > 1, tag = q.slice(1);
+            const uq = q.replace(/^@/, '');
+            const seenU = new Set();
+            const users = isTag ? [] : (window.DB.users || []).filter(u => u.handle && !seenU.has(u.handle) && seenU.add(u.handle) && (String(u.handle).toLowerCase().includes(uq) || String(u.fullname || '').toLowerCase().includes(q))).slice(0, 6);
+            const posts = window.publicPosts().filter(p => isTag ? window.tagsOf(window.plainText(p)).includes(tag) : window.plainText(p).toLowerCase().includes(q)).slice(0, 40);
+            const comms = isTag ? [] : (window.DB.communities || []).filter(c => String(c.name || '').toLowerCase().includes(q)).slice(0, 4);
+            let html = '';
+            if (users.length) html += `<div class="px-4 pt-4 text-xs font-bold uppercase text-[#71767b]">👤 Lidé</div>` + users.map(window.userRowHtml).join('');
+            if (comms.length) html += `<div class="px-4 pt-4 text-xs font-bold uppercase text-[#71767b]">👥 Komunity</div>` + comms.map(window.commRowHtml).join('');
+            html += `<div class="px-4 pt-4 pb-2 text-xs font-bold uppercase text-[#71767b]">📝 Posty (${posts.length})</div>`;
+            html += posts.length ? posts.map(p => window.postCardHtml(p)).join('') : '<div class="p-6 text-center text-sm text-[#71767b]">Nic jsme nenašli 🔍</div>';
+            box.innerHTML = html;
+        };
+
+        // ---------- Titulní fotka 🖼️ ----------
+        window.COVERS = {
+            sunset:  { name: 'Západ slunce', bg: 'linear-gradient(135deg,#ff7e5f,#feb47b 50%,#6a3093)' },
+            ocean:   { name: 'Oceán', bg: 'linear-gradient(135deg,#0f2027,#2c5364 50%,#00c9ff)' },
+            forest:  { name: 'Les', bg: 'linear-gradient(135deg,#134e5e,#71b280)' },
+            galaxy:  { name: 'Galaxie', bg: 'radial-gradient(circle at 30% 30%,#7f5af0 0%,#2a1458 40%,#0a0420 100%)' },
+            rainbow: { name: 'Duha', bg: 'linear-gradient(90deg,#ff5f6d,#ffc371,#47e891,#3fa7ff,#a65cff)' },
+            fire:    { name: 'Oheň', bg: 'linear-gradient(135deg,#200122,#6f0000 50%,#ff4b1f)' },
+            mint:    { name: 'Máta', bg: 'linear-gradient(135deg,#a8ff78,#78ffd6)' },
+            night:   { name: 'Noční město', bg: 'linear-gradient(180deg,#0f0c29,#302b63 50%,#24243e)' }
+        };
+        window.coverBg = (h) => { const c = (window.DB.covers || {})[h]; return (c && window.COVERS[c.k]) ? window.COVERS[c.k].bg : ''; };
+        window.openCoverPicker = () => {
+            const cur = ((window.DB.covers || {})[window.me()] || {}).k || '';
+            window.openGen('🖼️ Titulní fotka', '<div class="grid grid-cols-2 gap-2">' + Object.keys(window.COVERS).map(k => `<button type="button" onclick="window.setCover(${jsq(k)})" class="rounded-xl border-2 ${k === cur ? 'border-amber-400' : 'border-[#2f3336]'} p-1 text-left cursor-pointer"><div class="h-12 rounded-lg" style="background:${window.COVERS[k].bg}"></div><div class="text-xs font-bold text-white mt-1">${window.COVERS[k].name}${k === cur ? ' ✓' : ''}</div></button>`).join('') + `<button type="button" onclick="window.setCover('')" class="rounded-xl border-2 ${!cur ? 'border-amber-400' : 'border-[#2f3336]'} p-1 text-left cursor-pointer"><div class="h-12 rounded-lg bg-gradient-to-r from-brand/20 via-purple-600/20 to-amber-500/20"></div><div class="text-xs font-bold text-white mt-1">Výchozí${!cur ? ' ✓' : ''}</div></button></div>`);
+        };
+        window.setCover = async (k) => {
+            const h = window.me(); if (!h || (k && !window.COVERS[k])) return;
+            window.DB.covers = { ...(window.DB.covers || {}), [h]: { k } };
+            window.closeGen(); window.triggerUpdate();
+            if (window.db) { try { await setDoc(dref('covers', h), { k, time: Date.now() }); } catch(e) { console.warn(e); window.showToast('Titulní fotka se neuložila.', true); return; } }
+            window.showToast('Titulní fotka změněna 🖼️');
+        };
+        const _renderProfile = window.renderProfile;
+        window.renderProfile = () => {
+            _renderProfile();
+            const el = document.getElementById('profile-cover'); if (el) el.style.background = window.coverBg(window.me()) || '';
+        };
+        const _openUserProfile = window.openUserProfile;
+        window.openUserProfile = (h) => {
+            _openUserProfile(h);
+            const u = window.findUser(h); const body = document.getElementById('gen-body'); if (!u || !body) return;
+            const bg = window.coverBg(u.handle);
+            if (bg) body.insertAdjacentHTML('afterbegin', `<div class="h-20 rounded-2xl mb-3 border border-[#2f3336]" style="background:${bg}"></div>`);
+            if (u.handle !== window.me()) body.insertAdjacentHTML('beforeend', `<button type="button" onclick="window.startDm(${jsq(u.handle)})" class="mt-2 w-full py-2 rounded-full font-bold text-sm border border-brand text-brand cursor-pointer">💬 Napsat zprávu</button>`);
+        };
+
+        // ---------- Příběhy 📸 ----------
+        window.STORY_BGS = ['linear-gradient(135deg,#1d9bf0,#8b5cf6)', 'linear-gradient(135deg,#f59e0b,#ef4444)', 'linear-gradient(135deg,#10b981,#06b6d4)', 'linear-gradient(135deg,#ec4899,#f97316)', 'linear-gradient(135deg,#111827,#4b5563)', 'linear-gradient(135deg,#facc15,#84cc16)'];
+        window.activeStories = () => { const since = Date.now() - 86400000; return (window.DB.stories || []).filter(s => s.author && (s.time || 0) > since).sort((a,b) => a.time - b.time); };
+        window.storyGroups = () => {
+            const g = {}; window.activeStories().forEach(s => { (g[s.author] = g[s.author] || []).push(s); });
+            const me = window.me();
+            return Object.keys(g).sort((a,b) => (a === me ? -1 : b === me ? 1 : 0) || (g[b][g[b].length - 1].time - g[a][g[a].length - 1].time)).map(h => ({ h, items: g[h] }));
+        };
+        window.storySeen = () => { try { return JSON.parse(safeStorage.get('flex_story_seen') || '[]'); } catch(e) { return []; } };
+        window.renderStories = () => {
+            const bar = document.getElementById('stories-bar'); if (!bar || !window.currentUser) return;
+            const seen = new Set(window.storySeen()), me = window.me();
+            const add = `<div class="flex flex-col items-center gap-1 flex-shrink-0 w-16 cursor-pointer" onclick="window.openStoryCreator()"><div class="relative"><img src="${esc(window.avatarOf(me))}" class="w-14 h-14 rounded-full object-cover border-2 border-[#2f3336]"><span class="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-brand text-white rounded-full text-xs font-bold flex items-center justify-center border-2 border-black">+</span></div><span class="text-[11px] text-[#71767b] truncate w-full text-center">Přidat</span></div>`;
+            bar.innerHTML = add + window.storyGroups().map((g, gi) => {
+                const allSeen = g.items.every(s => seen.has(s.id));
+                return `<div class="flex flex-col items-center gap-1 flex-shrink-0 w-16 cursor-pointer" onclick="window.openStory(${gi})"><div class="story-ring ${allSeen ? 'seen' : ''}"><img src="${esc(window.avatarOf(g.h))}" class="w-14 h-14 rounded-full object-cover border-2 border-black block"></div><span class="text-[11px] text-[#e7e9ea] truncate w-full text-center">${g.h === me ? 'Ty' : '@' + esc(g.h)}</span></div>`;
+            }).join('');
+        };
+        window.SV = null;
+        window.openStory = (gi) => {
+            const groups = window.storyGroups(); const g = groups[gi]; if (!g) return;
+            const seen = new Set(window.storySeen()); const first = g.items.findIndex(s => !seen.has(s.id));
+            window.SV = { groups, gi, si: first >= 0 ? first : 0, timer: null };
+            document.getElementById('story-viewer').classList.remove('hidden');
+            window.showStoryFrame();
+        };
+        window.showStoryFrame = () => {
+            const sv = window.SV; if (!sv) return; clearTimeout(sv.timer);
+            const g = sv.groups[sv.gi]; if (!g) return window.closeStory();
+            const s = g.items[sv.si]; if (!s) return window.closeStory();
+            const seen = window.storySeen(); if (!seen.includes(s.id)) { seen.push(s.id); safeStorage.set('flex_story_seen', JSON.stringify(seen.slice(-300))); }
+            document.getElementById('story-bars').innerHTML = g.items.map((x, i) => `<div class="flex-1 h-1 rounded-full bg-white/30 overflow-hidden"><div class="h-full bg-white" style="${i < sv.si ? 'width:100%' : (i === sv.si ? 'width:0%;animation:storyBar 5s linear forwards' : 'width:0%')}"></div></div>`).join('');
+            const u = window.findUser(g.h) || {};
+            document.getElementById('story-head').innerHTML = `<img src="${esc(window.avatarOf(g.h))}" class="w-8 h-8 rounded-full object-cover"><span>${esc(u.fullname || g.h)}</span><span class="text-white/60 font-normal text-xs">${window.relTime(s.time)}</span>`;
+            const canDel = s.author === window.me() || window.checkIsOwner(window.currentUser);
+            document.getElementById('story-del').innerHTML = canDel ? `<button type="button" onclick="event.stopPropagation();window.deleteStory(${jsq(s.id)})" class="text-white/80 hover:text-red-400 w-10 h-10 cursor-pointer" title="Smazat příběh"><i class="fa-solid fa-trash"></i></button>` : '';
+            const body = document.getElementById('story-body');
+            if (s.type === 'image' && s.url) {
+                body.style.background = '#000';
+                body.innerHTML = `<img src="${esc(s.url)}" class="max-w-full max-h-full object-contain" onerror="this.style.display='none'">${s.text ? `<div class="absolute bottom-10 left-0 right-0 text-center text-white text-lg font-bold px-6" style="text-shadow:0 2px 8px #000">${esc(s.text)}</div>` : ''}`;
+            } else {
+                body.style.background = window.STORY_BGS[s.bg | 0] || window.STORY_BGS[0];
+                body.innerHTML = `<div class="text-white text-3xl sm:text-4xl font-extrabold text-center px-8 whitespace-pre-wrap break-words" style="text-shadow:0 2px 10px rgba(0,0,0,.35)">${esc(s.text)}</div>`;
+            }
+            sv.timer = setTimeout(window.nextStory, 5000);
+        };
+        window.nextStory = () => { const sv = window.SV; if (!sv) return; const g = sv.groups[sv.gi]; if (g && sv.si < g.items.length - 1) sv.si++; else { sv.gi++; sv.si = 0; } window.showStoryFrame(); };
+        window.prevStory = () => { const sv = window.SV; if (!sv) return; if (sv.si > 0) sv.si--; else if (sv.gi > 0) { sv.gi--; sv.si = 0; } window.showStoryFrame(); };
+        window.storyTap = (e) => { const r = e.currentTarget.getBoundingClientRect(); if (e.clientX - r.left < r.width / 3) window.prevStory(); else window.nextStory(); };
+        window.closeStory = () => { if (window.SV) clearTimeout(window.SV.timer); window.SV = null; document.getElementById('story-viewer').classList.add('hidden'); window.renderStories(); };
+        window.deleteStory = async (id) => {
+            if (window.SV) clearTimeout(window.SV.timer);
+            if (!confirm('Smazat tenhle příběh?')) { window.showStoryFrame(); return; }
+            const s = (window.DB.stories || []).find(x => x.id === id);
+            window.DB.stories = (window.DB.stories || []).filter(x => x.id !== id); window.closeStory();
+            if (window.db) { try { await window.ensureAuth(); await deleteDoc(dref('stories', id)); } catch(e) { console.warn(e); if (s) window.DB.stories.push(s); window.renderStories(); window.showToast('Smazání se nepovedlo.', true); return; } }
+            window.showToast('Příběh smazán');
+        };
+        window.newStoryBg = 0;
+        window.openStoryCreator = () => {
+            if (window.checkBanStatus(window.me())) return;
+            window.newStoryBg = 0;
+            window.openGen('📸 Nový příběh', `<textarea id="story-text" rows="3" maxlength="150" placeholder="Napiš něco nebo dej emoji 😎" class="w-full bg-black border border-[#2f3336] rounded-xl p-3 text-sm text-white focus:outline-none focus:border-brand resize-none"></textarea>
+              <div class="text-xs text-[#71767b] mt-2 mb-1">Pozadí:</div><div id="story-bg-pick" class="flex gap-2 mb-3">${window.STORY_BGS.map((b, i) => `<button type="button" onclick="window.pickStoryBg(${i})" data-i="${i}" class="w-8 h-8 rounded-full border-2 ${i === 0 ? 'border-white' : 'border-transparent'} cursor-pointer" style="background:${b}"></button>`).join('')}</div>
+              <input id="story-img" type="text" placeholder="…nebo odkaz na obrázek (nepovinné URL)" class="w-full bg-black border border-[#2f3336] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand">
+              <div class="text-xs text-[#71767b] mt-2">⏳ Příběh zmizí po 24 hodinách.</div>
+              <button type="button" onclick="window.submitStory()" class="mt-3 w-full py-2.5 rounded-full bg-brand text-white font-bold cursor-pointer">Přidat příběh</button>`);
+        };
+        window.pickStoryBg = (i) => { window.newStoryBg = i; document.querySelectorAll('#story-bg-pick button').forEach(b => { const on = +b.dataset.i === i; b.classList.toggle('border-white', on); b.classList.toggle('border-transparent', !on); }); };
+        window.submitStory = async () => {
+            if (window.checkBanStatus(window.me())) return;
+            const t = (document.getElementById('story-text').value || '').trim().slice(0, 150);
+            const url = (document.getElementById('story-img').value || '').trim();
+            if (!t && !url) return window.showToast('Napiš text nebo dej odkaz na obrázek.', true);
+            if (url && !/^https?:\/\//i.test(url)) return window.showToast('Odkaz musí začínat http:// nebo https://', true);
+            const id = `s_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+            const s = { author: window.me(), authorName: window.currentUser.fullname, type: url ? 'image' : 'text', text: t, url, bg: window.newStoryBg, time: Date.now() };
+            window.DB.stories = [...(window.DB.stories || []), { ...s, id }]; window.closeGen(); window.renderStories();
+            if (window.db) { try { await setDoc(dref('stories', id), s); } catch(e) { console.warn(e); window.showToast('Příběh se neuložil.', true); return; } }
+            window.showToast('Příběh přidán 📸');
+        };
+
+        // ---------- Komunity 👥 ----------
+        window.COMM_ICONS = ['👥','🎮','⚽','🎨','🎵','📚','🐶','🚀','🍕','🧪','🎬','💎'];
+        window.activeComm = null;
+        window.isMember = (c) => (c.members || []).includes(window.me());
+        window.commRowHtml = (c) => `<div onclick="window.openCommunity(${jsq(c.id)})" class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[#16181c]/50"><div class="w-12 h-12 rounded-2xl bg-[#16181c] border border-[#2f3336] flex items-center justify-center text-2xl flex-shrink-0">${esc(c.icon || '👥')}</div><div class="min-w-0 flex-1"><div class="font-bold text-white truncate">${esc(c.name)}</div><div class="text-xs text-[#71767b] truncate">${esc(c.desc || '')}</div><div class="text-xs text-[#71767b]">👤 ${(c.members || []).length} členů${window.isMember(c) ? ' · ✅ jsi členem' : ''}</div></div></div>`;
+        window.renderCommunities = () => {
+            if (window.activeComm) return window.renderCommunityView();
+            const box = document.getElementById('comm-list'); if (!box || !window.currentUser) return;
+            const q = (document.getElementById('comm-search').value || '').trim().toLowerCase();
+            const list = (window.DB.communities || []).filter(c => c.name && (!q || String(c.name).toLowerCase().includes(q) || String(c.desc || '').toLowerCase().includes(q)));
+            list.sort((a,b) => (window.isMember(b) - window.isMember(a)) || ((b.members || []).length - (a.members || []).length));
+            box.innerHTML = list.length ? list.map(window.commRowHtml).join('') : `<div class="p-10 text-center"><div class="text-5xl mb-2">👥</div><div class="text-white font-bold">${q ? 'Žádná komunita nenalezena' : 'Zatím tu nejsou žádné komunity'}</div><div class="text-sm text-[#71767b] mt-1">Založ první a pozvi kamarády! ✨</div></div>`;
+        };
+        window.openCommunity = (id) => {
+            window.closeGen();
+            window.activeComm = id; window.switchTab('communities');
+            document.getElementById('comm-list-view').classList.add('hidden'); document.getElementById('comm-view').classList.remove('hidden');
+            window.renderCommunityView(); window.scrollTo(0, 0);
+        };
+        window.closeCommunity = () => {
+            window.activeComm = null;
+            document.getElementById('comm-view').classList.add('hidden'); document.getElementById('comm-list-view').classList.remove('hidden');
+            window.renderCommunities();
+        };
+        window.renderCommunityView = () => {
+            const v = document.getElementById('comm-view'); if (!v || !window.currentUser) return;
+            const c = (window.DB.communities || []).find(x => x.id === window.activeComm);
+            if (!c) { v.innerHTML = `<div class="p-4"><button type="button" onclick="window.closeCommunity()" class="text-brand font-bold cursor-pointer">← Zpět</button><div class="p-10 text-center text-[#71767b]">Komunita nenalezena.</div></div>`; return; }
+            if (!document.getElementById('comm-head')) v.innerHTML = `<div id="comm-head"></div><div id="comm-compose"></div><div id="comm-feed"></div>`;
+            const me = window.me(), member = window.isMember(c), canEdit = c.owner === me || window.isRealOwner();
+            document.getElementById('comm-head').innerHTML = `<div class="p-4 border-b border-[#2f3336]"><button type="button" onclick="window.closeCommunity()" class="text-brand font-bold text-sm mb-3 cursor-pointer">← Všechny komunity</button><div class="flex items-center gap-3"><div class="w-16 h-16 rounded-2xl bg-[#16181c] border border-[#2f3336] flex items-center justify-center text-4xl flex-shrink-0">${esc(c.icon || '👥')}</div><div class="min-w-0 flex-1"><h3 class="text-xl font-extrabold text-white truncate">${esc(c.name)}</h3><div class="text-xs text-[#71767b]">👤 ${(c.members || []).length} členů · založil(a) @${esc(c.owner)}</div></div></div><p class="text-sm text-[#e7e9ea] mt-3 whitespace-pre-wrap">${esc(c.desc || '')}</p><div class="flex gap-2 mt-3">${member ? (c.owner === me ? '' : `<button type="button" onclick="window.leaveCommunity(${jsq(c.id)})" class="px-4 py-1.5 rounded-full border border-[#2f3336] text-white text-sm font-bold cursor-pointer">Odejít</button>`) : `<button type="button" onclick="window.joinCommunity(${jsq(c.id)})" class="px-4 py-1.5 rounded-full bg-white text-black text-sm font-bold cursor-pointer">Přidat se</button>`}${canEdit ? `<button type="button" onclick="window.openCommunityEditor(${jsq(c.id)})" class="px-4 py-1.5 rounded-full border border-amber-400/60 text-amber-400 text-sm font-bold cursor-pointer">✏️ Upravit</button>` : ''}</div></div>`;
+            const cb = document.getElementById('comm-compose');
+            const st = c.id + ':' + member;
+            if (cb.dataset.state !== st) {
+                cb.dataset.state = st;
+                cb.innerHTML = member ? `<div class="p-4 border-b border-[#2f3336]"><textarea id="comm-post-text" rows="2" maxlength="280" placeholder="Napiš něco do komunity..." class="w-full bg-transparent text-white placeholder-[#71767b] focus:outline-none resize-none"></textarea><div class="flex justify-end"><button type="button" onclick="window.submitCommunityPost()" class="bg-brand text-white font-bold px-5 py-2 rounded-full text-sm cursor-pointer">Publikovat</button></div></div>` : '';
+            }
+            const feed = document.getElementById('comm-feed');
+            if (!member) { feed.innerHTML = `<div class="p-10 text-center"><div class="text-5xl mb-2">🔒</div><div class="text-white font-bold">Posty vidí jen členové</div><div class="text-sm text-[#71767b] mt-1">Přidej se a můžeš psát s ostatními.</div></div>`; return; }
+            const posts = (window.DB.posts || []).filter(p => p.communityId === c.id);
+            feed.innerHTML = posts.length ? posts.map(p => window.postCardHtml(p)).join('') : `<div class="p-10 text-center text-[#71767b] text-sm">Zatím tu nic není. Napiš první post! ✍️</div>`;
+        };
+        window.joinCommunity = async (id) => {
+            if (window.checkBanStatus(window.me())) return;
+            const c = (window.DB.communities || []).find(x => x.id === id); if (!c) return;
+            const me = window.me(); if (window.isMember(c)) return;
+            c.members = [...(c.members || []), me]; window.triggerUpdate();
+            if (window.db) { try { await updateDoc(dref('communities', id), { members: arrayUnion(me) }); } catch(e) { console.warn(e); c.members = c.members.filter(h => h !== me); window.triggerUpdate(); window.showToast('Nepodařilo se přidat.', true); return; } }
+            window.notify(c.owner, 'community', { text: c.name });
+            window.showToast('Vítej v komunitě ' + (c.icon || '👥'));
+        };
+        window.leaveCommunity = async (id) => {
+            const c = (window.DB.communities || []).find(x => x.id === id); if (!c) return;
+            const me = window.me(); if (c.owner === me) return;
+            if (!confirm('Opravdu odejít z komunity „' + c.name + '“?')) return;
+            c.members = (c.members || []).filter(h => h !== me); window.triggerUpdate();
+            if (window.db) { try { await updateDoc(dref('communities', id), { members: arrayRemove(me) }); } catch(e) { console.warn(e); window.showToast('Nepodařilo se odejít.', true); return; } }
+            window.showToast('Odešel(a) jsi z komunity');
+        };
+        window.newCommIcon = '👥';
+        window.openCommunityEditor = (id) => {
+            if (window.checkBanStatus(window.me())) return;
+            const c = id ? (window.DB.communities || []).find(x => x.id === id) : null;
+            if (c && !(c.owner === window.me() || window.isRealOwner())) return;
+            window.newCommIcon = c ? (c.icon || '👥') : '👥';
+            window.openGen(c ? '✏️ Upravit komunitu' : '➕ Nová komunita', `<input id="comm-name" maxlength="40" value="${esc(c ? c.name : '')}" placeholder="Název komunity" class="w-full bg-black border border-[#2f3336] rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand mb-2"><textarea id="comm-desc" rows="3" maxlength="200" placeholder="O čem komunita je?" class="w-full bg-black border border-[#2f3336] rounded-xl p-3 text-sm text-white focus:outline-none focus:border-brand resize-none">${esc(c ? (c.desc || '') : '')}</textarea><div class="text-xs text-[#71767b] mt-2 mb-1">Ikona:</div><div id="comm-icon-pick" class="grid grid-cols-6 gap-2">${window.COMM_ICONS.map(e => `<button type="button" data-e="${e}" onclick="window.pickCommIcon(this.dataset.e)" class="text-2xl h-10 rounded-xl border-2 ${e === window.newCommIcon ? 'border-brand' : 'border-transparent'} bg-black cursor-pointer">${e}</button>`).join('')}</div><button type="button" onclick="window.saveCommunity(${jsq(c ? c.id : '')})" class="mt-4 w-full py-2.5 rounded-full bg-brand text-white font-bold cursor-pointer">${c ? 'Uložit' : 'Založit komunitu'}</button>`);
+        };
+        window.pickCommIcon = (e) => { window.newCommIcon = e; document.querySelectorAll('#comm-icon-pick button').forEach(b => { const on = b.dataset.e === e; b.classList.toggle('border-brand', on); b.classList.toggle('border-transparent', !on); }); };
+        window.saveCommunity = async (id) => {
+            if (window.checkBanStatus(window.me())) return;
+            const name = (document.getElementById('comm-name').value || '').trim().slice(0, 40);
+            const desc = (document.getElementById('comm-desc').value || '').trim().slice(0, 200);
+            const icon = window.newCommIcon || '👥';
+            if (!name) return window.showToast('Komunita potřebuje název.', true);
+            const me = window.me();
+            if (id) {
+                const c = (window.DB.communities || []).find(x => x.id === id);
+                if (!c || !(c.owner === me || window.isRealOwner())) return;
+                Object.assign(c, { name, desc, icon }); window.closeGen(); window.triggerUpdate();
+                if (window.db) { try { await updateDoc(dref('communities', id), { name, desc, icon }); } catch(e) { console.warn(e); window.showToast('Změny se neuložily.', true); return; } }
+                window.showToast('Komunita upravena ✏️'); return;
+            }
+            if ((window.DB.communities || []).some(c => String(c.name || '').toLowerCase() === name.toLowerCase())) return window.showToast('Komunita s tímhle názvem už existuje.', true);
+            const nid = `c_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+            const c = { name, desc, icon, owner: me, members: [me], time: Date.now() };
+            window.DB.communities = [...(window.DB.communities || []), { ...c, id: nid }];
+            window.openCommunity(nid);
+            if (window.db) { try { await setDoc(dref('communities', nid), c); } catch(e) { console.warn(e); window.showToast('Komunita se neuložila.', true); return; } }
+            window.showToast('Komunita založena 🎉');
+        };
+        window.submitCommunityPost = async () => {
+            if (window.checkBanStatus(window.me())) return;
+            const c = (window.DB.communities || []).find(x => x.id === window.activeComm);
+            if (!c || !window.isMember(c)) return window.showToast('Nejdřív se přidej do komunity.', true);
+            const ta = document.getElementById('comm-post-text'); const t = (ta.value || '').trim(); if (!t) return;
+            if (t.length > 280) return window.showToast('Post je moc dlouhý (max 280 znaků).', true);
+            ta.value = '';
+            const np = { ...window.newPostBase(), text: t, communityId: c.id };
+            if (await window.savePost(np)) { window.notifyMentions(t, np.id); window.showToast('Publikováno v komunitě 👥'); }
+        };
+
+        // ---------- NOVÝ CHAT 💬 (chats + chatMessages, starý chat jako archiv) ----------
+        window.activeChat = null;
+        window._chatRenderKey = '';
+        window.chatIdFor = (members) => 'dm_' + members.map(h => encodeURIComponent(h)).sort().join('__');
+        window.myChats = () => (window.DB.chats || []).filter(c => (c.members || []).includes(window.me())).sort((a,b) => (b.lastTime || b.time || 0) - (a.lastTime || a.time || 0));
+        window.chatOther = (c) => (c.members || []).find(h => h !== window.me()) || window.me();
+        window.chatUnread = (c) => { const me = window.me(), r = (c.reads || {})[me] || 0; return (window.DB.chatMsgs || []).filter(m => m.chatId === c.id && m.sender !== me && (m.time || 0) > r).length; };
+        window.chatTitle = (c) => { if (c.isGroup) return c.name || 'Skupina'; const o = window.chatOther(c), u = window.findUser(o); return u ? (u.fullname || o) : o; };
+        window.chatIcon = (c) => c.isGroup ? `<span>${esc(c.icon || '👥')}</span>` : `<img src="${esc(window.avatarOf(window.chatOther(c)))}" class="w-full h-full object-cover">`;
+        window.renderMessages = () => {
+            if (!window.currentUser) return;
+            const me = window.me(), chats = window.myChats();
+            let total = 0; chats.forEach(c => { total += window.chatUnread(c); });
+            const badge = document.getElementById('chat-unread');
+            if (badge) { badge.textContent = total > 9 ? '9+' : String(total); badge.classList.toggle('hidden', total === 0); }
+            const list = document.getElementById('chat-list'); if (!list) return;
+            list.innerHTML = chats.length ? chats.map(c => {
+                const n = window.chatUnread(c);
+                const who = c.lastSender === me ? 'Ty: ' : (c.isGroup && c.lastSender ? '@' + c.lastSender + ': ' : '');
+                return `<div onclick="window.openChat(${jsq(c.id)})" class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[#16181c]/50"><div class="w-12 h-12 rounded-full overflow-hidden bg-[#16181c] border border-[#2f3336] flex items-center justify-center text-2xl flex-shrink-0">${window.chatIcon(c)}</div><div class="min-w-0 flex-1"><div class="flex justify-between gap-2"><span class="font-bold text-white truncate">${esc(window.chatTitle(c))}${c.isGroup ? ` <span class="text-xs text-[#71767b] font-normal">(${(c.members || []).length})</span>` : ''}</span><span class="text-xs text-[#71767b] whitespace-nowrap">${c.lastTime ? window.relTime(c.lastTime) : ''}</span></div><div class="flex justify-between items-center gap-2"><span class="text-sm ${n ? 'text-white font-bold' : 'text-[#71767b]'} truncate">${c.lastText ? esc(who + c.lastText) : 'Zatím žádné zprávy'}</span>${n ? `<span class="bg-brand text-white text-xs font-bold rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">${n}</span>` : ''}</div></div></div>`;
+            }).join('') : `<div class="p-10 text-center"><div class="text-5xl mb-2">💬</div><div class="text-white font-bold">Zatím žádné konverzace</div><div class="text-sm text-[#71767b] mt-1">Klikni na „✏️ Nový chat“ a napiš kamarádovi!</div></div>`;
+            const olds = {};
+            (window.DB.msgs || []).forEach(m => { const o = m.sender === me ? m.recipient : (m.recipient === me ? m.sender : null); if (o) olds[o] = Math.max(olds[o] || 0, m.time || 0); });
+            const ok = Object.keys(olds).filter(Boolean).sort((a,b) => olds[b] - olds[a]);
+            const oldBox = document.getElementById('chat-old-list');
+            if (oldBox) oldBox.innerHTML = ok.length ? `<div class="px-4 pt-5 pb-2 text-xs font-bold uppercase text-[#71767b]">📦 Staré zprávy (archiv, jen ke čtení)</div>` + ok.map(h => `<div onclick="window.openOldChat(${jsq(h)})" class="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-[#16181c]/50 opacity-80"><img src="${esc(window.avatarOf(h))}" class="w-10 h-10 rounded-full object-cover"><div class="min-w-0"><div class="text-sm font-bold text-white">@${esc(h)}</div><div class="text-xs text-[#71767b]">${window.relTime(olds[h])}</div></div></div>`).join('') : '';
+            if (window.activeChat) window.renderChatRoom(false);
+        };
+        window.showChatRoom = (on) => {
+            document.getElementById('chat-list-view').classList.toggle('hidden', on);
+            document.getElementById('chat-room-view').classList.toggle('hidden', !on);
+        };
+        window.openChat = (id) => {
+            window.closeGen();
+            window.activeChat = { id }; window._chatRenderKey = '';
+            window.switchTab('messages'); window.showChatRoom(true);
+            window.renderChatRoom(true);
+            setTimeout(() => { const i = document.getElementById('dm-input'); if (i) i.focus(); }, 60);
+        };
+        window.openOldChat = (h) => { window.activeChat = { old: h }; window._chatRenderKey = ''; window.showChatRoom(true); window.renderChatRoom(true); };
+        window.closeChatRoom = () => { window.activeChat = null; window.showChatRoom(false); window.renderMessages(); };
+        window.markChatRead = async (c) => {
+            const tab = document.getElementById('tab-messages');
+            if (!c || !tab || tab.classList.contains('hidden') || document.hidden) return;
+            const me = window.me();
+            const last = (window.DB.chatMsgs || []).filter(m => m.chatId === c.id).reduce((mx, m) => Math.max(mx, m.time || 0), 0);
+            if (last <= ((c.reads || {})[me] || 0)) return;
+            const t = Math.max(Date.now(), last);
+            c.reads = { ...(c.reads || {}), [me]: t };
+            window.renderMessages();
+            if (window.db) { try { await setDoc(dref('chats', c.id), { reads: { [me]: t } }, { merge: true }); } catch(e) { console.warn(e); } }
+        };
+        window.renderChatRoom = (force) => {
+            const ac = window.activeChat; if (!ac) return;
+            const me = window.me(), box = document.getElementById('chat-room-msgs'); if (!box) return;
+            let msgs = [], title = '', sub = '', icon = '', c = null, isGroup = false;
+            if (ac.old) {
+                msgs = (window.DB.msgs || []).filter(m => (m.sender === me && m.recipient === ac.old) || (m.sender === ac.old && m.recipient === me));
+                title = '@' + ac.old; sub = '📦 Archiv starého chatu'; icon = `<img src="${esc(window.avatarOf(ac.old))}" class="w-full h-full object-cover">`;
+            } else {
+                c = (window.DB.chats || []).find(x => x.id === ac.id);
+                if (!c || !(c.members || []).includes(me)) { box.innerHTML = '<div class="text-center text-[#71767b] py-10 text-sm">Načítám chat…</div>'; return; }
+                isGroup = !!c.isGroup;
+                msgs = (window.DB.chatMsgs || []).filter(m => m.chatId === c.id);
+                title = window.chatTitle(c); icon = window.chatIcon(c);
+                sub = isGroup ? (c.members || []).map(h => '@' + h).join(', ') : '@' + window.chatOther(c);
+            }
+            document.getElementById('chat-room-title').textContent = title;
+            document.getElementById('chat-room-sub').textContent = sub;
+            document.getElementById('chat-room-icon').innerHTML = icon;
+            document.getElementById('chat-room-compose').classList.toggle('hidden', !!ac.old);
+            const ro = document.getElementById('chat-room-readonly');
+            ro.classList.toggle('hidden', !ac.old);
+            if (ac.old) ro.innerHTML = `📦 Tohle je archiv starého chatu (jen ke čtení). <button type="button" onclick="window.startDm(${jsq(ac.old)})" class="text-brand font-bold cursor-pointer">Napsat v novém chatu →</button>`;
+            if (c) window.markChatRead(c);
+            const lastM = msgs[msgs.length - 1];
+            const key = (ac.id || 'old:' + ac.old) + '|' + msgs.length + '|' + (lastM ? lastM.time : 0);
+            if (!force && key === window._chatRenderKey) return;
+            const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 150;
+            window._chatRenderKey = key;
+            let prev = null;
+            box.innerHTML = msgs.length ? msgs.map(m => {
+                const mine = m.sender === me;
+                const showName = isGroup && !mine && m.sender !== prev; prev = m.sender;
+                return `<div class="flex ${mine ? 'justify-end' : 'justify-start'}"><div class="max-w-[80%]">${showName ? `<div class="text-[11px] text-[#71767b] ml-2 mb-0.5">${esc(m.senderName || m.sender)}</div>` : ''}<div class="px-4 py-2 rounded-2xl text-[15px] whitespace-pre-wrap break-words ${mine ? 'bg-brand text-white rounded-br-sm' : 'bg-[#16181c] text-[#e7e9ea] border border-[#2f3336] rounded-bl-sm'}">${esc(m.text)}</div><div class="text-[10px] text-[#71767b] mt-0.5 ${mine ? 'text-right mr-1' : 'ml-2'}">${window.relTime(m.time)}</div></div></div>`;
+            }).join('') : `<div class="text-center text-[#71767b] py-10 text-sm">Napiš první zprávu 👋</div>`;
+            if (force || nearBottom || (lastM && lastM.sender === me)) box.scrollTop = box.scrollHeight;
+        };
+        window.startDm = async (h) => {
+            const me = window.me(); if (!h || h === me) return;
+            if (window.checkBanStatus(me)) return;
+            const id = window.chatIdFor([me, h]);
+            let c = (window.DB.chats || []).find(x => x.id === id);
+            if (!c) {
+                c = { id, members: [me, h], isGroup: false, createdBy: me, time: Date.now() };
+                window.DB.chats = [...(window.DB.chats || []), c];
+                if (window.db) { try { await setDoc(dref('chats', id), { members: c.members, isGroup: false, createdBy: me, time: c.time }, { merge: true }); } catch(e) { console.warn(e); window.showToast('Chat se nepodařilo založit.', true); } }
+            }
+            window.openChat(id);
+        };
+        window.ncSel = [];
+        window.openNewChat = () => {
+            if (window.checkBanStatus(window.me())) return;
+            window.ncSel = [];
+            window.openGen('✏️ Nový chat', `<input id="nc-q" oninput="window.ncRender()" placeholder="Hledat @jméno..." class="w-full bg-black border border-[#2f3336] rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand mb-2"><div id="nc-sel" class="flex flex-wrap gap-1 mb-2"></div><div id="nc-list" class="max-h-64 overflow-y-auto"></div><div id="nc-group" class="hidden mt-2"><input id="nc-name" maxlength="40" placeholder="Název skupiny (např. Parta 🎮)" class="w-full bg-black border border-[#2f3336] rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand"></div><button type="button" onclick="window.ncStart()" class="mt-3 w-full py-2.5 rounded-full bg-brand text-white font-bold cursor-pointer">Začít chat</button><div class="text-[11px] text-[#71767b] mt-2">Vyber 1 člověka = soukromý chat, víc lidí = skupina 👥. Zprávy nejsou šifrované – nepiš sem hesla ani osobní údaje.</div>`);
+            window.ncRender();
+        };
+        window.ncRender = () => {
+            const qEl = document.getElementById('nc-q'), listEl = document.getElementById('nc-list'); if (!qEl || !listEl) return;
+            const q = qEl.value.trim().toLowerCase().replace(/^@/, ''), me = window.me(), seenU = new Set();
+            const users = (window.DB.users || []).filter(u => u.handle && u.handle !== me && !seenU.has(u.handle) && seenU.add(u.handle) && (!q || String(u.handle).toLowerCase().includes(q) || String(u.fullname || '').toLowerCase().includes(q))).slice(0, 30);
+            listEl.innerHTML = users.map(u => { const on = window.ncSel.includes(u.handle); return `<div onclick="window.ncToggle(${jsq(u.handle)})" class="flex items-center gap-3 py-2 px-2 rounded-xl cursor-pointer ${on ? 'bg-brand/15' : 'hover:bg-[#2f3336]/40'}"><img src="${esc(window.avatarOf(u.handle))}" class="w-9 h-9 rounded-full object-cover"><div class="min-w-0 flex-1"><div class="text-sm font-bold text-white truncate">${esc(u.fullname || u.handle)}</div><div class="text-xs text-[#71767b]">@${esc(u.handle)}</div></div><div class="text-lg">${on ? '✅' : '⬜'}</div></div>`; }).join('') || '<div class="text-sm text-[#71767b] py-4 text-center">Nikdo nenalezen.</div>';
+            document.getElementById('nc-sel').innerHTML = window.ncSel.map(h => `<span class="px-2 py-0.5 rounded-full bg-brand/20 text-brand text-xs font-bold">@${esc(h)}</span>`).join('');
+            document.getElementById('nc-group').classList.toggle('hidden', window.ncSel.length < 2);
+        };
+        window.ncToggle = (h) => { window.ncSel = window.ncSel.includes(h) ? window.ncSel.filter(x => x !== h) : [...window.ncSel, h].slice(0, 20); window.ncRender(); };
+        window.ncStart = async () => {
+            const sel = window.ncSel; if (!sel.length) return window.showToast('Vyber aspoň jednoho člověka.', true);
+            if (sel.length === 1) return window.startDm(sel[0]);
+            if (window.checkBanStatus(window.me())) return;
+            const me = window.me();
+            const name = (document.getElementById('nc-name').value || '').trim().slice(0, 40) || ('Skupina ' + [me, ...sel].slice(0, 3).map(h => '@' + h).join(', '));
+            const id = `g_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+            const data = { members: [me, ...sel], isGroup: true, name, icon: '👥', createdBy: me, time: Date.now() };
+            window.DB.chats = [...(window.DB.chats || []), { ...data, id }];
+            if (window.db) { try { await setDoc(dref('chats', id), data); } catch(e) { console.warn(e); window.showToast('Skupinu se nepodařilo založit.', true); return; } }
+            window.openChat(id);
+            window.showToast('Skupina založena 👥');
+        };
+        window.submitMessage = async () => {
+            const ac = window.activeChat; if (!ac || ac.old || !window.currentUser) return;
+            if (window.checkBanStatus(window.me())) return;
+            const inp = document.getElementById('dm-input'); const t = (inp.value || '').trim().slice(0, 1000); if (!t) return;
+            const c = (window.DB.chats || []).find(x => x.id === ac.id); if (!c || !(c.members || []).includes(window.me())) return;
+            const now = Date.now(), me = window.me();
+            const m = { chatId: c.id, sender: me, senderName: window.currentUser.fullname, text: t, time: now };
+            inp.value = ''; const er = document.getElementById('chat-emoji-row'); if (er) er.classList.add('hidden');
+            const localId = 'local_' + now;
+            window.DB.chatMsgs = [...(window.DB.chatMsgs || []), { ...m, id: localId }];
+            Object.assign(c, { lastText: t.slice(0, 80), lastTime: now, lastSender: me, reads: { ...(c.reads || {}), [me]: now } });
+            window.renderMessages();
+            if (window.db) {
+                try {
+                    await setDoc(doc(cref('chatMessages')), m);
+                    await setDoc(dref('chats', c.id), { lastText: t.slice(0, 80), lastTime: now, lastSender: me, reads: { [me]: now } }, { merge: true });
+                } catch(e) {
+                    console.warn(e); window.showToast('Zpráva se neodeslala.', true);
+                    window.DB.chatMsgs = window.DB.chatMsgs.filter(x => x.id !== localId); window.renderMessages();
+                }
+            }
+        };
+        document.addEventListener('visibilitychange', () => { if (!document.hidden && window.activeChat && window.activeChat.id) { const c = (window.DB.chats || []).find(x => x.id === window.activeChat.id); if (c) window.markChatRead(c); } });
+
+        // ---------- Tlačítko nahoru ⬆️ ----------
+        window.updateToTop = () => {
+            const b = document.getElementById('to-top-btn'); if (!b) return;
+            const home = document.getElementById('tab-home');
+            b.classList.toggle('hidden', !(window.currentUser && window.scrollY > 700 && home && !home.classList.contains('hidden')));
+        };
+        window.addEventListener('scroll', window.updateToTop, { passive: true });
+
+        // ---------- Co je nového ve v2.0 ----------
+        window.showWhatsNew = () => {
+            safeStorage.set('flex_seen_v20', '1');
+            const items = [
+                ['💬', 'Úplně nový chat', 'soukromé i skupinové konverzace v reálném čase, nepřečtené zprávy'],
+                ['📸', 'Příběhy', 'text, emoji nebo obrázek – zmizí po 24 hodinách'],
+                ['👥', 'Komunity', 'založ si vlastní, přidej kamarády, posty jen pro členy'],
+                ['🔔', 'Oznámení', 'lajky, komentáře, zmínky, sledování a reposty'],
+                ['🔁', 'Repost a citace', 'sdílej posty ostatních'],
+                ['#️⃣', 'Hashtagy a Trendy', 'co se teď nejvíc řeší'],
+                ['🔍', 'Hledání', 'posty, lidi i komunity'],
+                ['🖼️', 'Titulní fotka', '8 pozadí na profil'],
+                ['😀', 'Emoji, animované ❤️ a tlačítko Nahoru', ''],
+                ['🎨', 'Nové styly: Polární záře a Cukrová vata', 'pro majitele odznaku (kromě modrého)'],
+                ['📝', 'Koncepty', 'rozepsaný post se sám uloží']
+            ];
+            window.openGen('🎉 Co je nového ve v2.0', `<div class="space-y-2.5">${items.map(([e, t, d]) => `<div class="flex gap-3"><div class="text-2xl w-8 text-center">${e}</div><div><div class="text-sm font-bold text-white">${t}</div>${d ? `<div class="text-xs text-[#71767b]">${d}</div>` : ''}</div></div>`).join('')}</div>`);
+        };
+
+        // ---------- Napojení na přihlášení, překreslování a záložky ----------
+        const _finishLogin = window.finishLogin;
+        window.finishLogin = () => {
+            window.activeChat = null; window.activeComm = null; window._chatRenderKey = '';
+            try { window.showChatRoom(false); document.getElementById('comm-view').classList.add('hidden'); document.getElementById('comm-list-view').classList.remove('hidden'); } catch(e) {}
+            const ta = document.getElementById('post-text'); if (ta) ta.value = '';
+            _finishLogin();
+            try { window.updateCharCount(); const n = document.getElementById('draft-note'); if (n) n.classList.add('hidden'); window.restoreDraft(); } catch(e) {}
+            if (!safeStorage.get('flex_seen_v20')) setTimeout(() => { if (window.currentUser) window.showWhatsNew(); }, 800);
+        };
+        const _triggerUpdate = window.triggerUpdate;
+        window.triggerUpdate = () => {
+            _triggerUpdate();
+            if (!window.currentUser) return;
+            const vis = (id) => { const el = document.getElementById(id); return !!el && !el.classList.contains('hidden'); };
+            try { window.renderStories(); } catch(e) { console.warn('stories', e); }
+            try { window.renderBell(); } catch(e) { console.warn('bell', e); }
+            try { if (vis('tab-search')) window.renderSearch(); } catch(e) { console.warn('search', e); }
+            try { if (vis('tab-communities')) window.renderCommunities(); } catch(e) { console.warn('comm', e); }
+        };
+        const _switchTab = window.switchTab;
+        window.switchTab = (t) => {
+            _switchTab(t);
+            const titles = { search: 'Hledat', communities: 'Komunity' };
+            if (titles[t]) document.getElementById('header-title').textContent = titles[t];
+            if (!window.currentUser) return;
+            if (t === 'search') window.renderSearch();
+            if (t === 'communities') window.renderCommunities();
+            if (t === 'messages') window.renderMessages();
+            window.updateToTop();
         };
 
         // START
