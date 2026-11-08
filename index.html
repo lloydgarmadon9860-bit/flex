@@ -497,7 +497,7 @@
         </main>
 
         <aside id="v22-right" class="v22-right"></aside>
-        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.3</div>
+        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.4</div>
         <button id="to-top-btn" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-brand text-white font-bold px-4 py-2 rounded-full shadow-xl text-sm cursor-pointer">⬆️ Nahoru</button>
         <!-- Bottom Nav -->
         <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-3 py-3 flex justify-between items-center z-40 pb-safe">
@@ -982,7 +982,7 @@
                     }, (e) => {});
                 } catch(e){}
             };
-            listenGlobal('badges'); listenGlobal('bios'); listenGlobal('bans'); listenGlobal('devs'); listenGlobal('follows'); listenGlobal('outage');
+            listenGlobal('badges'); listenGlobal('bios'); listenGlobal('bans'); listenGlobal('devs'); listenGlobal('follows'); listenGlobal('outage'); listenGlobal('premium');
 
             try {
                 onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'posts'), (s) => {
@@ -2629,7 +2629,7 @@
             let tr = []; try { tr = window.trends() || []; } catch(e) {}
             const prem = window.myPremium(), days = window.v22PremiumDaysLeft();
             const canGift = !window.v22GiftAccepted() && Date.now() >= window.V22.giftStart && Date.now() < window.V22.giftAcceptEnd;
-            el.innerHTML = `<div class="v22-box"><div class="font-extrabold text-white text-lg">Flex Premium ✨</div><div class="text-sm text-[#71767b] mt-1">${prem ? 'Máš Premium ještě ' + days + ' ' + (days === 1 ? 'den' : (days < 5 ? 'dny' : 'dní')) + '. Žádné reklamy 🎉' : 'Premium si můžeš převzít zdarma každý měsíc 1.–7. den.'}</div>${canGift ? '<button type="button" onclick="window.v22AcceptGift()" class="mt-3 px-4 py-2 rounded-full bg-white text-black font-bold text-sm cursor-pointer">🎁 Přijmout dárek</button>' : ''}</div>`
+            el.innerHTML = `<div class="v22-box"><div class="font-extrabold text-white text-lg">Flex Premium ✨</div><div class="text-sm text-[#71767b] mt-1">${prem ? 'Máš Premium ještě ' + window.v24Days(days) + '. Žádné reklamy 🎉' : 'Premium si můžeš převzít zdarma každý měsíc 1.–7. den.'}</div>${canGift ? '<button type="button" onclick="window.v22AcceptGift()" class="mt-3 px-4 py-2 rounded-full bg-white text-black font-bold text-sm cursor-pointer">🎁 Přijmout dárek</button>' : ''}</div>`
                 + `<div class="v22-box"><div class="font-extrabold text-white text-lg mb-2">Co se děje</div>${tr.length ? tr.slice(0, 6).map(([t, n]) => `<div onclick="window.openTag && window.openTag(${jsq(t)})" class="py-2 cursor-pointer hover:opacity-80"><div class="text-xs text-[#71767b]">Trendy</div><div class="font-bold text-white">#${esc(t)}</div><div class="text-xs text-[#71767b]">${n} ${n === 1 ? 'post' : (n < 5 ? 'posty' : 'postů')}</div></div>`).join('') : '<div class="text-sm text-[#71767b]">Zatím žádné trendy. Napiš post s #něčím ✨</div>'}</div>`
                 + (!prem && window.v22Ads().length ? window.v22AdHtml(window.v22Ads()[0], 'mb-4') : '')
                 + `<div class="text-xs text-[#71767b] px-2">Flex od bubble · v2.3</div>`;
@@ -2647,7 +2647,7 @@
                 if (pl) {
                     const canGift = !window.v22GiftAccepted() && Date.now() >= window.V22.giftStart && Date.now() < window.V22.giftAcceptEnd;
                     pl.classList.toggle('hidden', !prem && !canGift);
-                    const txt = prem ? '✨ Premium ti zbývá ' + days + ' ' + (days === 1 ? 'den' : (days < 5 ? 'dny' : 'dní')) : '';
+                    const txt = prem ? '✨ Premium ti zbývá ' + window.v24Days(days) : '';
                     const btn = canGift ? ' <button type="button" onclick="window.v22AcceptGift()" class="ml-1 underline cursor-pointer">🎁 Přijmout dárek</button>' : '';
                     if (pl.dataset.v !== txt + btn) { pl.innerHTML = txt + btn; pl.dataset.v = txt + btn; }
                 }
@@ -2838,10 +2838,10 @@
         window.v23OpenPremium = () => {
             const prem = window.myPremium(), days = window.v22PremiumDaysLeft(), cur = window.v23Get('flex_accent', '');
             const perks = [['🚫', 'Žádné reklamy', ''], ['✨', 'Štítek Premium u jména', ''], ['📝', 'Delší posty', 'až 500 znaků místo 280'], ['🟡', 'Zlatý animovaný rámeček profilovky', 've feedu i na profilu'], ['🎨', 'Vlastní barva zvýraznění', 'vyber si barvu appky níže'], ['✏️', 'Úprava postu', 'do 10 minut od zveřejnění']];
-            const status = prem ? `<div class="rounded-2xl p-3 mb-3 text-sm font-bold text-white" style="background:linear-gradient(90deg,rgba(245,158,11,.25),rgba(236,72,153,.25),rgba(139,92,246,.25))">✨ Premium máš aktivní – zbývá ${days} ${days === 1 ? 'den' : (days < 5 ? 'dny' : 'dní')}</div>` : `<div class="rounded-2xl p-3 mb-3 text-sm text-[#e7e9ea] border border-[#2f3336]">Premium teď nemáš. Převzít si ho můžeš zdarma každý měsíc 1.–7. den ✨</div>`;
+            const status = prem ? `<div class="rounded-2xl p-3 mb-3 text-sm font-bold text-white" style="background:linear-gradient(90deg,rgba(245,158,11,.25),rgba(236,72,153,.25),rgba(139,92,246,.25))">✨ Premium máš aktivní – ${days === Infinity ? 'navždy ♾️' : 'zbývá ' + window.v24Days(days)}</div>` : `<div class="rounded-2xl p-3 mb-3 text-sm text-[#e7e9ea] border border-[#2f3336]">Premium teď nemáš. Převzít si ho můžeš zdarma každý měsíc 1.–7. den ✨</div>`;
             const list = perks.map(([e, t, d]) => `<div class="flex gap-3 py-1.5"><div class="text-xl w-7 text-center">${e}</div><div><div class="text-sm font-bold text-white">${t} ✨</div>${d ? `<div class="text-xs text-[#71767b]">${d}</div>` : ''}</div></div>`).join('');
             const picker = `<div class="mt-3 pt-3 border-t border-[#2f3336]"><div class="text-sm font-bold text-white mb-2">🎨 Barva zvýraznění</div>${prem ? `<div class="flex flex-wrap gap-2">${window.V23_ACCENTS.map(([c, n]) => `<button type="button" title="${n}" onclick="window.v23SetAccent('${c}')" class="w-9 h-9 rounded-full border-2 ${cur === c ? 'border-white' : 'border-transparent'} cursor-pointer" style="background:${c}"></button>`).join('')}<button type="button" onclick="window.v23SetAccent('')" class="px-3 h-9 rounded-full border border-[#2f3336] text-xs font-bold text-[#71767b] cursor-pointer">Výchozí</button></div>` : '<div class="text-xs text-[#71767b]">🔒 Jen s Premium</div>'}</div>`;
-            window.openGen('⚙️ Nastavení · Flex Premium ✨', status + list + picker);
+            window.openGen('⚙️ Nastavení · Flex Premium ✨', status + list + picker + window.v24OwnerBox());
         };
         (() => {
             const ep = document.querySelector('button[onclick="window.openBioModal()"]');
@@ -2851,6 +2851,41 @@
         window.v22RenderRight = () => {
             _v23right();
             try { const box = document.querySelector('#v22-right .v22-box'); if (box && !box.querySelector('.v23-prem-open')) box.insertAdjacentHTML('beforeend', '<button type="button" onclick="window.v23OpenPremium()" class="v23-prem-open mt-3 ml-1 px-4 py-2 rounded-full border border-[#2f3336] text-white font-bold text-sm cursor-pointer">Výhody ✨</button>'); } catch(e) {}
+        };
+
+
+        // ===================== v2.4: Premium od vlastníka =====================
+        window.v24Granted = (h) => { if (!h) return false; const u = (window.getDict('premium') || {})[h]; return u === -1 || (typeof u === 'number' && u > Date.now()); };
+        window.v24Forever = () => window.isRealOwner() || ((window.getDict('premium') || {})[window.me()] === -1);
+        const _v24my = window.myPremium;
+        window.myPremium = () => !!window.currentUser && (window.isRealOwner() || window.v24Granted(window.me()) || _v24my());
+        window.v22HasPremium = (h) => !!h && (h === window.me() ? window.myPremium() : (h === 'Flex' || window.v24Granted(h)));
+        const _v24dl = window.v22PremiumDaysLeft;
+        window.v22PremiumDaysLeft = () => {
+            if (!window.currentUser) return 0;
+            if (window.v24Forever()) return Infinity;
+            let d = _v24dl(); const u = (window.getDict('premium') || {})[window.me()];
+            if (typeof u === 'number' && u > Date.now()) d = Math.max(d, Math.ceil((u - Date.now()) / 86400000));
+            return d;
+        };
+        window.v24Days = (d) => d === Infinity ? 'navždy ♾️' : d + ' ' + (d === 1 ? 'den' : (d < 5 ? 'dny' : 'dní'));
+        window.v24GivePremium = async (handle, days) => {
+            if (!window.isRealOwner()) return window.showToast('Premium může dávat jen vlastník.', true);
+            handle = String(handle || '').trim().replace(/^@/, '');
+            if (!handle) return window.showToast('Napiš @jméno', true);
+            const val = days === 0 ? deleteField() : (days === -1 ? -1 : Date.now() + days * 86400000);
+            try { await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'globals', 'premium'), { [handle]: val }, { merge: true }); }
+            catch(e) { console.warn(e); return window.showToast('Neuloženo: Premium může dávat jen vlastník (Google).', true); }
+            const pd = Object.assign({}, window.getDict('premium')); if (days === 0) delete pd[handle]; else pd[handle] = val; window.DB.premium = pd;
+            window.showToast(days === 0 ? 'Premium odebráno' : '✨ Premium dáno @' + handle);
+            window.triggerUpdate(); window.v23OpenPremium();
+        };
+        window.v24OwnerBox = () => {
+            if (!window.isRealOwner()) return '';
+            const pd = window.getDict('premium') || {}, now = Date.now();
+            const rows = Object.keys(pd).filter(h => pd[h] === -1 || pd[h] > now).map(h => `<div class="flex items-center justify-between py-1 text-sm"><span class="text-white">@${esc(h)} <span class="text-[#71767b]">${pd[h] === -1 ? '♾️ navždy' : 'do ' + new Date(pd[h]).toLocaleDateString('cs-CZ')}</span></span><button type="button" onclick="window.v24GivePremium(${jsq(h)}, 0)" class="text-xs text-red-400 font-bold cursor-pointer">Odebrat</button></div>`).join('');
+            const b = (d, t) => `<button type="button" onclick="window.v24GivePremium(document.getElementById('v24-h').value, ${d})" class="px-3 py-1.5 rounded-full bg-white text-black text-xs font-bold cursor-pointer">${t}</button>`;
+            return `<div class="mt-3 pt-3 border-t border-[#2f3336]"><div class="text-sm font-bold text-white mb-2">👑 Dát Premium (jen vlastník)</div><input id="v24-h" placeholder="@jméno" class="w-full bg-black border border-[#2f3336] rounded-xl px-3 py-2 text-white text-sm mb-2"><div class="flex flex-wrap gap-2">${b(7, '7 dní')}${b(30, '30 dní')}${b(-1, 'Navždy ♾️')}</div>${rows ? `<div class="mt-3">${rows}</div>` : ''}</div>`;
         };
 
         // --- Profil: zlatý rámeček + záložky v profilu ---
