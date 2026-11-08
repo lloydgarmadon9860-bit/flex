@@ -180,6 +180,8 @@
         body.theme-sakura h1, body.theme-sakura h2 { text-shadow: 0 1px 0 #fff; }
         /* ===== v2.5: styly Čokoláda + Mráz ===== */
         body.theme-choco { --t-bg: linear-gradient(180deg,#2a1710 0%,#120805 100%); --t-card: rgba(61,36,26,.9); --t-header: rgba(30,15,10,.92); --t-border: #c68b5966; --t-text: #fbeee3; --t-muted: #c9a58a; --t-accent: #e0a060; --t-input: rgba(25,12,8,.85); --t-btntext: #2a1710; --t-font: 'Inter', sans-serif; }
+        body.theme-lemon { --t-bg: linear-gradient(180deg,#fffbd6 0%,#ffe97a 100%); --t-card: rgba(255,253,235,.92); --t-header: rgba(255,250,200,.94); --t-border: #d9b82e66; --t-text: #3a3200; --t-muted: #8a7a1c; --t-accent: #e6a800; --t-input: rgba(255,255,240,.95); --t-btntext: #3a3200; --t-font: 'Inter', sans-serif; }
+        body.theme-vampire { --t-bg: linear-gradient(180deg,#1a0508 0%,#050102 100%); --t-card: rgba(48,10,16,.92); --t-header: rgba(22,4,8,.94); --t-border: #b0192f66; --t-text: #f6dfe2; --t-muted: #b07a82; --t-accent: #e0213f; --t-input: rgba(20,3,6,.9); --t-btntext: #ffffff; --t-font: 'Inter', sans-serif; }
         body.theme-frost { --t-bg: linear-gradient(180deg,#e8f6ff 0%,#bfe3f7 100%); --t-card: rgba(255,255,255,.88); --t-header: rgba(240,250,255,.92); --t-border: #7ab8d966; --t-text: #0d2a3a; --t-muted: #4f7a92; --t-accent: #1e90d6; --t-input: rgba(255,255,255,.9); --t-btntext: #ffffff; --t-font: 'Inter', sans-serif; }
         /* ===== v2.3: styly Džungle + Půlnoční fialová, Premium rámeček ===== */
         body.theme-jungle { --t-bg: radial-gradient(ellipse at 10% 0%, rgba(120,200,60,.35) 0%, transparent 45%), radial-gradient(ellipse at 90% 100%, rgba(20,110,40,.5) 0%, transparent 55%), repeating-linear-gradient(115deg, rgba(160,230,90,.06) 0 14px, transparent 14px 34px), linear-gradient(180deg, #0b3d1a 0%, #062611 100%); --t-card: rgba(10,52,24,.86); --t-header: rgba(6,38,17,.9); --t-border: #4fbf4a66; --t-text: #eaffdf; --t-muted: #9ccf8f; --t-accent: #7ddf3c; --t-input: rgba(4,30,12,.85); --t-btntext: #062611; --t-font: 'Trebuchet MS', 'Inter', sans-serif; }
@@ -500,7 +502,7 @@
         </main>
 
         <aside id="v22-right" class="v22-right"></aside>
-        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.6</div>
+        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.7</div>
         <button id="to-top-btn" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-brand text-white font-bold px-4 py-2 rounded-full shadow-xl text-sm cursor-pointer">⬆️ Nahoru</button>
         <!-- Bottom Nav -->
         <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-3 py-3 flex justify-between items-center z-40 pb-safe">
@@ -2937,6 +2939,8 @@
         // --- 2 nové styly appky ---
         window.THEMES.jungle   = { name: 'Džungle 🌿', sw: 'linear-gradient(135deg,#062611,#2f8f2a 55%,#7ddf3c)' };
         window.THEMES.midnight = { name: 'Půlnoční fialová 🌌', sw: 'linear-gradient(135deg,#07020f,#4c1d95 55%,#e040fb)' };
+        window.THEMES.lemon = { name: 'Citron 🍋', sw: 'linear-gradient(135deg,#fffbd6,#ffe97a 55%,#e6a800)' };
+        window.THEMES.vampire = { name: 'Upír 🧛', sw: 'linear-gradient(135deg,#050102,#5a0f1c 55%,#e0213f)' };
         window.THEMES.choco = { name: 'Čokoláda 🍫', sw: 'linear-gradient(135deg,#120805,#5a3322 55%,#e0a060)' };
         window.THEMES.frost = { name: 'Mráz ❄️', sw: 'linear-gradient(135deg,#e8f6ff,#9fd4f0 55%,#1e90d6)' };
         // ===================== /v2.3 =====================
