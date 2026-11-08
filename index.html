@@ -178,6 +178,21 @@
         body.theme-sakura { --t-bg: radial-gradient(circle at 15% 10%, #ffd6e6 0%, transparent 40%), radial-gradient(circle at 85% 30%, #ffe9f1 0%, transparent 45%), linear-gradient(180deg, #fff5f8 0%, #fde7ef 100%); --t-card: rgba(255,255,255,.86); --t-header: rgba(255,240,246,.9); --t-border: #f4b6cc; --t-text: #4b1f33; --t-muted: #a26d84; --t-accent: #e2557f; --t-input: #fffafc; --t-btntext: #ffffff; --t-font: 'Trebuchet MS', 'Inter', sans-serif; }
         body.theme-sakura .bg-\[\#16181c\], body.theme-sakura .rounded-2xl.border { box-shadow: 0 4px 14px rgba(226,85,127,.14); }
         body.theme-sakura h1, body.theme-sakura h2 { text-shadow: 0 1px 0 #fff; }
+        /* ===== v2.3: styly Džungle + Půlnoční fialová, Premium rámeček ===== */
+        body.theme-jungle { --t-bg: radial-gradient(ellipse at 10% 0%, rgba(120,200,60,.35) 0%, transparent 45%), radial-gradient(ellipse at 90% 100%, rgba(20,110,40,.5) 0%, transparent 55%), repeating-linear-gradient(115deg, rgba(160,230,90,.06) 0 14px, transparent 14px 34px), linear-gradient(180deg, #0b3d1a 0%, #062611 100%); --t-card: rgba(10,52,24,.86); --t-header: rgba(6,38,17,.9); --t-border: #4fbf4a66; --t-text: #eaffdf; --t-muted: #9ccf8f; --t-accent: #7ddf3c; --t-input: rgba(4,30,12,.85); --t-btntext: #062611; --t-font: 'Trebuchet MS', 'Inter', sans-serif; }
+        body.theme-jungle .bg-\[\#16181c\], body.theme-jungle .rounded-2xl.border { box-shadow: inset 0 1px 0 rgba(160,240,100,.08), 0 6px 18px rgba(0,30,8,.45); }
+        body.theme-midnight { --t-bg: radial-gradient(1px 1px at 15% 25%, #e9d5ff 50%, transparent 51%), radial-gradient(1px 1px at 75% 60%, #f0abfc 50%, transparent 51%), radial-gradient(ellipse at 50% -10%, #4c1d95 0%, transparent 55%), linear-gradient(180deg, #14052b 0%, #07020f 100%); --t-card: rgba(28,10,52,.85); --t-header: rgba(14,4,30,.9); --t-border: #c026d366; --t-text: #f5ecff; --t-muted: #b39ddb; --t-accent: #e040fb; --t-input: rgba(12,3,26,.85); --t-btntext: #14052b; --t-font: 'Inter', sans-serif; }
+        body.theme-midnight .bg-\[\#16181c\], body.theme-midnight .rounded-2xl.border { box-shadow: 0 0 0 1px rgba(224,64,251,.18), 0 0 18px rgba(224,64,251,.18); }
+        body.theme-midnight h1, body.theme-midnight h2 { text-shadow: 0 0 8px rgba(224,64,251,.6); }
+        @keyframes v23glow { 0%,100% { box-shadow: 0 0 0 2px #f5c542, 0 0 6px 1px rgba(245,197,66,.55); } 50% { box-shadow: 0 0 0 3px #ffe08a, 0 0 16px 4px rgba(255,200,60,.85); } }
+        img.v23-gold { animation: v23glow 2.2s ease-in-out infinite; border-color: #f5c542 !important; }
+        .v23-act { color: #71767b; cursor: pointer; width: 32px; height: 32px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; transition: background-color .2s, color .2s; }
+        .v23-act:hover { background: rgba(29,155,240,.1); color: #1d9bf0; }
+        .v23-act.on { color: #1d9bf0; }
+        .v23-tabs button { flex: 1; padding: .8rem 0; font-weight: 700; color: #71767b; border-bottom: 3px solid transparent; cursor: pointer; }
+        .v23-tabs button.on { color: #e7e9ea; border-color: #1d9bf0; }
+        body[class*="theme-"] .v23-tabs button.on { color: var(--t-text); border-color: var(--t-accent); }
+        #v23-story-reply { position: relative; z-index: 2; }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
 </head>
@@ -482,7 +497,7 @@
         </main>
 
         <aside id="v22-right" class="v22-right"></aside>
-        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.2.3</div>
+        <div class="fixed bottom-[4.6rem] right-3 text-[10px] text-[#71767b]/60 pointer-events-none z-30 select-none">Flex v2.3</div>
         <button id="to-top-btn" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-brand text-white font-bold px-4 py-2 rounded-full shadow-xl text-sm cursor-pointer">⬆️ Nahoru</button>
         <!-- Bottom Nav -->
         <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto glass-header border-t border-[#2f3336] px-3 py-3 flex justify-between items-center z-40 pb-safe">
@@ -1572,10 +1587,10 @@
         window.updateCharCount = () => {
             const el = document.getElementById('post-text'); const c = document.getElementById('post-char-count');
             if (!el || !c) return;
-            const n = el.value.length;
-            c.textContent = `${n}/280`;
-            c.style.color = n > 280 ? '#f4212e' : (n > 260 ? '#ffd400' : '#71767b');
-            c.style.fontWeight = n > 280 ? '700' : '400';
+            const n = el.value.length, mx = window.postMax ? window.postMax() : 280;
+            c.textContent = `${n}/${mx}` + (mx > 280 ? ' ✨' : '');
+            c.style.color = n > mx ? '#f4212e' : (n > mx - 20 ? '#ffd400' : '#71767b');
+            c.style.fontWeight = n > mx ? '700' : '400';
         };
 
         // submitPost -> v2.0 blok níže
@@ -1954,7 +1969,8 @@
             const t = document.getElementById('post-text').value.trim();
             const i = document.getElementById('post-image').value.trim();
             if (!t && !i) return;
-            if (t.length > 280) { window.showToast('Post je moc dlouhý (max 280 znaků).', true); return; }
+            const _mx = window.postMax ? window.postMax() : 280;
+            if (t.length > _mx) { window.showToast('Post je moc dlouhý (max ' + _mx + ' znaků).', true); return; }
             const newPost = { ...window.newPostBase(), text: t, imageUrl: i };
             const _po = [1,2,3,4].map(n => (document.getElementById('poll-o'+n).value || '').trim().slice(0,40)).filter(Boolean);
             if (_po.length >= 2) { newPost.poll = _po; newPost.pollVotes = {}; }
@@ -2616,7 +2632,7 @@
             el.innerHTML = `<div class="v22-box"><div class="font-extrabold text-white text-lg">Flex Premium ✨</div><div class="text-sm text-[#71767b] mt-1">${prem ? 'Máš Premium ještě ' + days + ' ' + (days === 1 ? 'den' : (days < 5 ? 'dny' : 'dní')) + '. Žádné reklamy 🎉' : 'Premium si můžeš převzít zdarma každý měsíc 1.–7. den.'}</div>${canGift ? '<button type="button" onclick="window.v22AcceptGift()" class="mt-3 px-4 py-2 rounded-full bg-white text-black font-bold text-sm cursor-pointer">🎁 Přijmout dárek</button>' : ''}</div>`
                 + `<div class="v22-box"><div class="font-extrabold text-white text-lg mb-2">Co se děje</div>${tr.length ? tr.slice(0, 6).map(([t, n]) => `<div onclick="window.openTag && window.openTag(${jsq(t)})" class="py-2 cursor-pointer hover:opacity-80"><div class="text-xs text-[#71767b]">Trendy</div><div class="font-bold text-white">#${esc(t)}</div><div class="text-xs text-[#71767b]">${n} ${n === 1 ? 'post' : (n < 5 ? 'posty' : 'postů')}</div></div>`).join('') : '<div class="text-sm text-[#71767b]">Zatím žádné trendy. Napiš post s #něčím ✨</div>'}</div>`
                 + (!prem && window.v22Ads().length ? window.v22AdHtml(window.v22Ads()[0], 'mb-4') : '')
-                + `<div class="text-xs text-[#71767b] px-2">Flex od bubble · v2.2.3</div>`;
+                + `<div class="text-xs text-[#71767b] px-2">Flex od bubble · v2.3</div>`;
         };
 
         // --- Premium v hlavičce a profilu ---
@@ -2651,6 +2667,220 @@
         window.THEMES.graphite = { name: 'Grafit', sw: 'linear-gradient(135deg,#15171a,#4a5059 55%,#c9d1d9)' };
         window.THEMES.sakura   = { name: 'Třešňový květ', sw: 'linear-gradient(135deg,#fff5f8,#ffd6e6 55%,#e2557f)' };
         // ===================== /v2.2 =====================
+
+        // ===================== v2.3 =====================
+        window.v23Get = (k, d) => { try { const v = localStorage.getItem(k + '_' + (window.me() || 'anon')); return v == null ? d : JSON.parse(v); } catch(e) { return d; } };
+        window.v23Set = (k, v) => { try { localStorage.setItem(k + '_' + (window.me() || 'anon'), JSON.stringify(v)); } catch(e) {} };
+        window.postMax = () => (window.myPremium && window.myPremium()) ? 500 : 280;
+
+        // --- 🔖 Záložky (uložené jen v tomhle zařízení, pro každý účet zvlášť) ---
+        window.v23Bookmarks = () => { const b = window.v23Get('flex_bm', []); return Array.isArray(b) ? b : []; };
+        window.v23IsBm = (id) => window.v23Bookmarks().includes(id);
+        window.v23ToggleBm = (id) => {
+            let b = window.v23Bookmarks(); const on = b.includes(id);
+            b = on ? b.filter(x => x !== id) : [id, ...b].slice(0, 300);
+            window.v23Set('flex_bm', b);
+            window.showToast(on ? 'Odebráno ze záložek' : 'Uloženo do záložek 🔖');
+            try { window.renderPosts(); } catch(e) {}
+            try { window.v23RenderProfTab(); } catch(e) {}
+        };
+
+        // --- 🔗 Kopírovat odkaz ---
+        window.v23PostLink = (id) => location.origin + location.pathname + '#post=' + encodeURIComponent(id);
+        window.v23Copy = async (txt) => {
+            try { await navigator.clipboard.writeText(txt); return true; } catch(e) {}
+            try { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok; } catch(e) { return false; }
+        };
+        window.v23CopyLink = async (id) => { const ok = await window.v23Copy(window.v23PostLink(id)); window.showToast(ok ? 'Zkopírováno 🔗' : 'Kopírování se nepovedlo', !ok); };
+        window.v23HashDone = false;
+        window.v23CheckHash = () => {
+            if (window.v23HashDone || !window.currentUser || (window.db && !window.DB._postsLoaded)) return;
+            const m = /#post=([^&]+)/.exec(location.hash || ''); window.v23HashDone = true; if (!m) return;
+            const id = decodeURIComponent(m[1]);
+            if ((window.DB.posts || []).some(p => p.id === id)) setTimeout(() => window.openComments(id), 300);
+            else window.showToast('Post už neexistuje 🗑️', true);
+        };
+
+        // --- ✏️ Úprava postu do 10 minut (Premium) ---
+        window.v23CanEdit = (p) => !!p && window.myPremium() && p.authorHandle === window.me() && !p.repostOf && !(p.censored || []).length && Date.now() - (p.time || 0) < 600000 && Date.now() >= (p.time || 0) - 60000;
+        window.v23OpenEdit = (id) => {
+            const p = (window.DB.posts || []).find(x => x.id === id);
+            if (!window.v23CanEdit(p)) return window.showToast('Post jde upravit jen do 10 minut od zveřejnění (Premium ✨).', true);
+            const mx = p.communityId ? 280 : window.postMax();
+            window.openGen('✏️ Upravit post', `<textarea id="v23-edit-text" rows="4" maxlength="${mx}" class="w-full bg-black border border-[#2f3336] rounded-xl p-3 text-sm text-white focus:outline-none focus:border-brand resize-none">${esc(p.text || '')}</textarea><div class="text-xs text-[#71767b] mt-1">Max ${mx} znaků · upravit jde do 10 minut od zveřejnění ✨</div><button type="button" onclick="window.v23SaveEdit(${jsq(id)})" class="mt-3 w-full py-2.5 rounded-full bg-brand text-white font-bold cursor-pointer">Uložit úpravu</button>`);
+        };
+        window.v23SaveEdit = async (id) => {
+            const p = (window.DB.posts || []).find(x => x.id === id);
+            if (!window.v23CanEdit(p)) return window.showToast('Čas na úpravu vypršel ⏳', true);
+            const t = (document.getElementById('v23-edit-text').value || '').trim();
+            const mx = p.communityId ? 280 : window.postMax();
+            if (!t && !p.imageUrl) return window.showToast('Post nemůže být prázdný.', true);
+            if (t.length > mx) return window.showToast('Max ' + mx + ' znaků.', true);
+            if (window.checkBanStatus(window.me())) return;
+            const old = p.text; p.text = t; p.editedAt = Date.now();
+            window.closeGen(); window.triggerUpdate();
+            if (window.db) { try { await window.ensureAuth(); await updateDoc(dref('posts', p._doc || p.id), { text: t, editedAt: p.editedAt }); } catch(e) { console.warn(e); p.text = old; delete p.editedAt; window.triggerUpdate(); return window.showToast('Úprava se neuložila.', true); } }
+            window.showToast('Post upraven ✏️');
+        };
+
+        // --- Karta postu: záložka, odkaz, úprava, zlatý rámeček ---
+        const _v23card = window.postCardHtml;
+        window.postCardHtml = (p, opt = {}) => {
+            let h = _v23card(p, opt);
+            try {
+                const pid = jsq(p.id);
+                const bm = window.v23IsBm(p.id);
+                const acts = `<button type="button" onclick="event.stopPropagation();window.v23ToggleBm(${pid})" class="v23-act ${bm ? 'on' : ''}" title="${bm ? 'Odebrat ze záložek' : 'Uložit do záložek'}"><i class="fa-${bm ? 'solid' : 'regular'} fa-bookmark"></i></button><button type="button" onclick="event.stopPropagation();window.v23CopyLink(${pid})" class="v23-act" title="Kopírovat odkaz"><i class="fa-solid fa-link"></i></button>`;
+                const bi = h.indexOf('<button onclick="window.boostPost(');
+                if (bi >= 0) h = h.slice(0, bi) + acts + h.slice(bi);
+                if (window.v23CanEdit(p)) { const pi = h.indexOf('<button onclick="window.pinPost('); if (pi >= 0) h = h.slice(0, pi) + `<button type="button" onclick="window.v23OpenEdit(${pid})" title="Upravit (do 10 min) ✨" class="text-sm px-1 cursor-pointer">✏️</button>` + h.slice(pi); }
+                if (p.editedAt) { const tm = '· ' + window.relTime(p.time) + '</span>'; const ti = h.indexOf(tm); if (ti >= 0) h = h.slice(0, ti + tm.length) + '<span class="text-[#71767b] font-normal text-xs whitespace-nowrap ml-1">(upraveno)</span>' + h.slice(ti + tm.length); }
+                if (window.v22HasPremium(p.authorHandle)) h = h.replace('class="w-10 h-10 rounded-full', 'class="v23-gold w-10 h-10 rounded-full');
+            } catch(e) { console.warn(e); }
+            return h;
+        };
+
+        // --- Profil: ❤️ To se mi líbí + 🔖 Záložky ---
+        window.v23ProfTab = 'likes';
+        window.v23SetProfTab = (t) => { window.v23ProfTab = t; window.v23RenderProfTab(); };
+        window.v23RenderProfTab = () => {
+            const box = document.getElementById('v23-prof'); if (!box || !window.currentUser) return;
+            const me = window.me(), all = window.v22Visible ? window.v22Visible(window.DB.posts || []) : (window.DB.posts || []);
+            let list = [], empty = '';
+            if (window.v23ProfTab === 'bm') {
+                const bm = window.v23Bookmarks(); list = bm.map(id => all.find(p => p.id === id)).filter(Boolean);
+                empty = 'Zatím žádné záložky. Ulož si post ikonkou 🔖';
+            } else {
+                list = all.filter(p => !p.repostOf && (p.likes || []).includes(me)).sort((a, b) => (b.time || 0) - (a.time || 0));
+                empty = 'Zatím jsi nic nelajknul(a) ❤️';
+            }
+            const tabs = `<div class="v23-tabs flex border-b border-[#2f3336]"><button type="button" class="${window.v23ProfTab !== 'bm' ? 'on' : ''}" onclick="window.v23SetProfTab('likes')">❤️ To se mi líbí</button><button type="button" class="${window.v23ProfTab === 'bm' ? 'on' : ''}" onclick="window.v23SetProfTab('bm')">🔖 Záložky</button></div>`;
+            const html = tabs + (list.length ? list.slice(0, 50).map(p => window.postCardHtml(p)).join('') : `<div class="p-10 text-center text-sm text-[#71767b]">${empty}</div>`);
+            if (box.dataset.v !== html) { box.innerHTML = html; box.dataset.v = html; }
+        };
+        window.v23OpenBookmarks = () => { window.switchTab('profile'); window.v23SetProfTab('bm'); setTimeout(() => document.getElementById('v23-prof')?.scrollIntoView({ behavior: 'smooth' }), 150); };
+        (() => {
+            const pin = document.getElementById('profile-pinned');
+            if (pin && !document.getElementById('v23-prof')) pin.insertAdjacentHTML('afterend', '<div id="v23-prof" class="mt-4 border-t border-[#2f3336]"></div>');
+            const nav = document.querySelector('nav.glass-header');
+            const prof = nav && nav.querySelector('[data-tab="profile"]');
+            if (prof && !document.getElementById('v23-nav-bm')) prof.insertAdjacentHTML('beforebegin', '<button id="v23-nav-bm" type="button" onclick="window.v23OpenBookmarks()" class="nav-btn v23-pc-only text-[#71767b] hover:text-white p-2 text-xl transition cursor-pointer" title="Záložky"><i class="fa-solid fa-bookmark"></i></button>');
+            const st = document.createElement('style');
+            st.textContent = '.v23-pc-only{display:none !important;} @media (min-width:1100px){ .v23-pc-only{display:flex !important;} }';
+            document.head.appendChild(st);
+        })();
+
+        // --- 💬 Odpovědi na Příběhy ---
+        (() => {
+            const sv = document.getElementById('story-viewer'); if (!sv || document.getElementById('v23-story-reply')) return;
+            sv.insertAdjacentHTML('beforeend', `<div id="v23-story-reply" class="hidden flex gap-2 px-3 pb-4 pb-safe"><input id="v23-story-input" type="text" maxlength="300" placeholder="Odpovědět…" class="flex-1 bg-black border border-white/40 rounded-full px-5 py-3 text-sm text-white placeholder-white/60 focus:outline-none focus:border-white"><button type="button" onclick="window.v23SendStoryReply()" class="px-4 rounded-full bg-white text-black font-bold cursor-pointer"><i class="fa-solid fa-paper-plane"></i></button></div>`);
+            const inp = document.getElementById('v23-story-input');
+            inp.addEventListener('focus', () => { if (window.SV) clearTimeout(window.SV.timer); });
+            inp.addEventListener('blur', () => { if (window.SV && !inp.value.trim()) { clearTimeout(window.SV.timer); window.SV.timer = setTimeout(window.nextStory, 5000); } });
+            inp.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); window.v23SendStoryReply(); } });
+        })();
+        window.v23CurStory = () => { const sv = window.SV; if (!sv) return null; const g = sv.groups[sv.gi]; return g ? g.items[sv.si] || null : null; };
+        const _v23ssf = window.showStoryFrame;
+        window.showStoryFrame = () => {
+            _v23ssf();
+            try {
+                const s = window.v23CurStory(), box = document.getElementById('v23-story-reply'), inp = document.getElementById('v23-story-input');
+                if (box) box.classList.toggle('hidden', !s || s.author === window.me());
+                if (inp) { inp.value = ''; inp.blur(); }
+            } catch(e) { console.warn(e); }
+        };
+        window.v23SendDm = async (h, text) => {
+            const me = window.me(); if (!h || h === me || !text) return false;
+            const id = window.chatIdFor([me, h]);
+            let c = (window.DB.chats || []).find(x => x.id === id);
+            if (!c) {
+                c = { id, members: [me, h], isGroup: false, createdBy: me, time: Date.now() };
+                window.DB.chats = [...(window.DB.chats || []), c];
+                if (window.db) { try { await setDoc(dref('chats', id), { members: c.members, isGroup: false, createdBy: me, time: c.time }, { merge: true }); } catch(e) { console.warn(e); return false; } }
+            }
+            const now = Date.now(), t = text.slice(0, 1000);
+            const m = { chatId: id, sender: me, senderName: window.currentUser.fullname, text: t, time: now };
+            if (window.db) {
+                try {
+                    await setDoc(doc(cref('chatMessages')), m);
+                    await setDoc(dref('chats', id), { lastText: t.slice(0, 80), lastTime: now, lastSender: me, reads: { [me]: now } }, { merge: true });
+                } catch(e) { console.warn(e); return false; }
+            } else window.DB.chatMsgs = [...(window.DB.chatMsgs || []), { ...m, id: 'local_' + now }];
+            Object.assign(c, { lastText: t.slice(0, 80), lastTime: now, lastSender: me, reads: { ...(c.reads || {}), [me]: now } });
+            try { window.renderMessages(); } catch(e) {}
+            return true;
+        };
+        window.v23SendStoryReply = async () => {
+            const s = window.v23CurStory(), inp = document.getElementById('v23-story-input'); if (!s || !inp) return;
+            const r = inp.value.trim(); if (!r) return;
+            if (window.checkBanStatus(window.me())) return;
+            const what = s.text ? '„' + String(s.text).slice(0, 60) + '“' : '📷 obrázek';
+            inp.value = '';
+            const ok = await window.v23SendDm(s.author, '💬 Odpověď na tvůj příběh ' + what + ':\n' + r);
+            window.showToast(ok ? 'Odpověď odeslána do chatu ✉️' : 'Odpověď se neodeslala.', !ok);
+            if (window.SV) { clearTimeout(window.SV.timer); window.SV.timer = setTimeout(window.nextStory, 2500); }
+        };
+
+        // --- 🎨 Vlastní barva zvýraznění (Premium) ---
+        window.V23_ACCENTS = [['#1d9bf0','Modrá'],['#f5c542','Zlatá'],['#22c55e','Zelená'],['#ef4444','Červená'],['#f97316','Oranžová'],['#ec4899','Růžová'],['#a855f7','Fialová'],['#14b8a6','Tyrkysová']];
+        window.v23Accent = () => { const a = window.v23Get('flex_accent', ''); return (window.myPremium() && /^#[0-9a-f]{6}$/i.test(a)) ? a : ''; };
+        window.v23ApplyAccent = () => {
+            let st = document.getElementById('v23-accent-style');
+            if (!st) { st = document.createElement('style'); st.id = 'v23-accent-style'; document.head.appendChild(st); }
+            const a = window.v23Accent();
+            const css = a ? `body.v23-acc{--t-accent:${a} !important;} body.v23-acc .text-brand{color:${a} !important;} body.v23-acc .bg-brand{background-color:${a} !important;} body.v23-acc .border-brand{border-color:${a} !important;} body.v23-acc .v23-tabs button.on{border-color:${a} !important;} body.v23-acc #feed-filter-all.border-brand::after, body.v23-acc #feed-filter-following.border-brand::after{background:${a} !important;} body.v23-acc .v23-act.on{color:${a} !important;}` : '';
+            if (st.textContent !== css) st.textContent = css;
+            document.body.classList.toggle('v23-acc', !!a);
+        };
+        window.v23SetAccent = (a) => { if (!window.myPremium()) return window.showToast('Vlastní barva je jen pro Premium ✨', true); window.v23Set('flex_accent', a); window.v23ApplyAccent(); window.v23OpenPremium(); window.showToast(a ? 'Barva nastavena 🎨' : 'Barva vrácena'); };
+
+        // --- ✨ Premium v nastavení ---
+        window.v23OpenPremium = () => {
+            const prem = window.myPremium(), days = window.v22PremiumDaysLeft(), cur = window.v23Get('flex_accent', '');
+            const perks = [['🚫', 'Žádné reklamy', ''], ['✨', 'Štítek Premium u jména', ''], ['📝', 'Delší posty', 'až 500 znaků místo 280'], ['🟡', 'Zlatý animovaný rámeček profilovky', 've feedu i na profilu'], ['🎨', 'Vlastní barva zvýraznění', 'vyber si barvu appky níže'], ['✏️', 'Úprava postu', 'do 10 minut od zveřejnění']];
+            const status = prem ? `<div class="rounded-2xl p-3 mb-3 text-sm font-bold text-white" style="background:linear-gradient(90deg,rgba(245,158,11,.25),rgba(236,72,153,.25),rgba(139,92,246,.25))">✨ Premium máš aktivní – zbývá ${days} ${days === 1 ? 'den' : (days < 5 ? 'dny' : 'dní')}</div>` : `<div class="rounded-2xl p-3 mb-3 text-sm text-[#e7e9ea] border border-[#2f3336]">Premium teď nemáš. Převzít si ho můžeš zdarma každý měsíc 1.–7. den ✨</div>`;
+            const list = perks.map(([e, t, d]) => `<div class="flex gap-3 py-1.5"><div class="text-xl w-7 text-center">${e}</div><div><div class="text-sm font-bold text-white">${t} ✨</div>${d ? `<div class="text-xs text-[#71767b]">${d}</div>` : ''}</div></div>`).join('');
+            const picker = `<div class="mt-3 pt-3 border-t border-[#2f3336]"><div class="text-sm font-bold text-white mb-2">🎨 Barva zvýraznění</div>${prem ? `<div class="flex flex-wrap gap-2">${window.V23_ACCENTS.map(([c, n]) => `<button type="button" title="${n}" onclick="window.v23SetAccent('${c}')" class="w-9 h-9 rounded-full border-2 ${cur === c ? 'border-white' : 'border-transparent'} cursor-pointer" style="background:${c}"></button>`).join('')}<button type="button" onclick="window.v23SetAccent('')" class="px-3 h-9 rounded-full border border-[#2f3336] text-xs font-bold text-[#71767b] cursor-pointer">Výchozí</button></div>` : '<div class="text-xs text-[#71767b]">🔒 Jen s Premium</div>'}</div>`;
+            window.openGen('⚙️ Nastavení · Flex Premium ✨', status + list + picker);
+        };
+        (() => {
+            const ep = document.querySelector('button[onclick="window.openBioModal()"]');
+            if (ep && !document.getElementById('v23-prem-btn')) ep.insertAdjacentHTML('afterend', '<button id="v23-prem-btn" type="button" onclick="window.v23OpenPremium()" class="bg-transparent hover:bg-[#16181c] border border-[#2f3336] text-white font-bold px-4 py-1.5 rounded-full text-sm transition cursor-pointer">⚙️ Premium ✨</button>');
+        })();
+        const _v23right = window.v22RenderRight;
+        window.v22RenderRight = () => {
+            _v23right();
+            try { const box = document.querySelector('#v22-right .v22-box'); if (box && !box.querySelector('.v23-prem-open')) box.insertAdjacentHTML('beforeend', '<button type="button" onclick="window.v23OpenPremium()" class="v23-prem-open mt-3 ml-1 px-4 py-2 rounded-full border border-[#2f3336] text-white font-bold text-sm cursor-pointer">Výhody ✨</button>'); } catch(e) {}
+        };
+
+        // --- Profil: zlatý rámeček + záložky v profilu ---
+        window.v23Gold = () => {
+            const on = window.myPremium();
+            ['profile-banner-avatar', 'compose-avatar', 'header-avatar'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.toggle('v23-gold', on); });
+        };
+        const _v23rp = window.renderProfile;
+        window.renderProfile = (...a) => { const r = _v23rp(...a); try { window.v23Gold(); window.v23RenderProfTab(); } catch(e) { console.warn(e); } return r; };
+        const _v23tu = window.triggerUpdate;
+        window.triggerUpdate = () => {
+            _v23tu();
+            if (!window.currentUser) return;
+            try { const tp = document.getElementById('tab-profile'); if (tp && !tp.classList.contains('hidden')) window.v23RenderProfTab(); } catch(e) {}
+            try { window.v23CheckHash(); } catch(e) {}
+        };
+        let _v23lastPrem = null;
+        setInterval(() => {
+            if (!window.currentUser) return;
+            try {
+                window.v23Gold(); window.v23ApplyAccent(); window.v23CheckHash();
+                const pr = window.myPremium(); if (pr !== _v23lastPrem) { _v23lastPrem = pr; window.updateCharCount(); }
+            } catch(e) {}
+        }, 2000);
+        window.addEventListener('hashchange', () => { window.v23HashDone = false; window.v23CheckHash(); });
+
+        // --- 2 nové styly appky ---
+        window.THEMES.jungle   = { name: 'Džungle 🌿', sw: 'linear-gradient(135deg,#062611,#2f8f2a 55%,#7ddf3c)' };
+        window.THEMES.midnight = { name: 'Půlnoční fialová 🌌', sw: 'linear-gradient(135deg,#07020f,#4c1d95 55%,#e040fb)' };
+        // ===================== /v2.3 =====================
 
         // START
         window.openAccountSwitcher();
